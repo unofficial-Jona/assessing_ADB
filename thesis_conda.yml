@@ -247,4 +247,5 @@ dependencies:
   - xmltodict
   - av
   - opencv
+  - matplotlib
 prefix: /opt/conda/envs/thesis
