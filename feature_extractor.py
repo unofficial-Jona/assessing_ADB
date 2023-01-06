@@ -125,7 +125,7 @@ class FeatureExtractor():
         # gc.collect(features, stack1, stack2, flow_stack1, flow_stack2)
         flow_features = torch.cat(flow_features, dim=0).to('cpu')
 
-        assert flow_features.shape == rgb_features.shape, f'shapes of rgb ({rgb_features.shape}) and flow ({flow_features.shape}) features do not match'
+        # assert flow_features.shape == rgb_features.shape, f'shapes of rgb ({rgb_features.shape}) and flow ({flow_features.shape}) features do not match'
 
         return rgb_features.detach().cpu().resolve_conj().resolve_neg().numpy(), flow_features.detach().cpu().resolve_conj().resolve_neg().numpy()
 
@@ -190,10 +190,11 @@ class FeatureExtractor():
             rgb_features, flow_features = self.video_processor(
                 os.path.join(self.vid_dir, video_file_name))
 
-        if rgb_features.shape == flow_features.shape:
+        if rgb_features.shape != flow_features.shape:
+            print(f'rgb_shape={rgb_features.shape}, flow_shape={flow_features.shape}')
             self.error_file[video_file_name] = 'feature shape mismatch'
             return None, None
-        if annotation.shape[0] == rgb_features.shape[0]:
+        if annotation.shape[0] != rgb_features.shape[0]:
             self.error_file[video_file_name] = 'annotation shape mismatch'
             return None, None
 
@@ -255,12 +256,15 @@ class FeatureExtractor():
                     output_dict['features'].update(vid_features)
                     output_dict['annotations'].update(vid_annot)
 
+
                     if save:
-                        file_name = f'file_features_{file_path[-29:-4]}_{start_time}.pkl'
+    
+                        file_name = f'file_features_{file_path[-29:-4]}.pkl'
                         vid_save = {'meta': general_informaion,
                             'features': vid_features, 
                             'annotations': vid_annot
                             }
+
                         with open(self.output_dir + file_name, 'wb') as file:
                             pickle.dump(vid_save, file)
 
@@ -272,7 +276,7 @@ class FeatureExtractor():
         
         if save:
             # create the file name using the start_time and extracted_features variables
-            file_name = 'extracted_features_{}.pkl'.format(start_time)
+            file_name = f'extracted_features_{start_time}.pkl'
 
             # open the file in write mode
             with open(self.output_dir + file_name, 'wb') as file:
@@ -283,6 +287,7 @@ class FeatureExtractor():
 
 
 if __name__ == '__main__':
+    
     parser = argparse.ArgumentParser(description='Extract frames from videos')
     parser.add_argument('--FPS', type=int)
     config = parser.parse_args()
