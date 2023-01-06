@@ -264,9 +264,9 @@ class FeatureExtractor():
                         with open(self.output_dir + file_name, 'wb') as file:
                             pickle.dump(vid_save, file)
 
-                    except:
-                        self.error_file[file_path[-29:-4]] = 'catched by try-except block'
-                        continue
+                except:
+                    self.error_file[file_path[-29:-4]] = 'catched by try-except block'
+                    continue
 
         output_dict['error_file'] = self.error_file
         
