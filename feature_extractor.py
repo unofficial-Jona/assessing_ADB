@@ -246,22 +246,27 @@ class FeatureExtractor():
 
         else:
             for file_path in tqdm(glob(self.vid_dir + '/*.MP4')):
-                vid_features, vid_annot = self.file_to_features(file_path)
+                try:
+                    vid_features, vid_annot = self.file_to_features(file_path)
 
-                if vid_features == None:
-                    continue
+                    if vid_features == None:
+                        continue
 
-                output_dict['features'].update(vid_features)
-                output_dict['annotations'].update(vid_annot)
+                    output_dict['features'].update(vid_features)
+                    output_dict['annotations'].update(vid_annot)
 
-                if save:
-                    file_name = f'file_features_{file_path[-29:-4]}_{start_time}.pkl'
-                    vid_save = {'meta': general_informaion,
-                        'features': vid_features, 
-                        'annotations': vid_annot
-                        }
-                    with open(self.output_dir + file_name, 'wb') as file:
-                        pickle.dump(vid_save, file)
+                    if save:
+                        file_name = f'file_features_{file_path[-29:-4]}_{start_time}.pkl'
+                        vid_save = {'meta': general_informaion,
+                            'features': vid_features, 
+                            'annotations': vid_annot
+                            }
+                        with open(self.output_dir + file_name, 'wb') as file:
+                            pickle.dump(vid_save, file)
+
+                    except:
+                        self.error_file[file_path[-29:-4]] = 'catched by try-except block'
+                        continue
 
         output_dict['error_file'] = self.error_file
         
