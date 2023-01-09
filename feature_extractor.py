@@ -82,6 +82,7 @@ class FeatureExtractor():
             self.labels = {'RuleBreak': {'WrongLane', 'WrongTurn', 'TrafficLight'}, 'LaneChanging': {'True'}, 'LaneChanging(m)': {
                 'True'}, 'OverTaking': {'True'}, 'Yield': {'True'}, 'Cutting': {'True'}, 'ZigzagMovement': {'True'}, 'OverSpeeding': {'True'}}
         if 'labels_mapping' in kwargs.keys():
+            warnings.warn('if labels are mapped to the same value only the first one will be mentioned in info_json', category=UserWarning, stacklevel=2)
             self.labels_mapping = kwargs['labels_mapping']
         else:
             self.labels_mapping = {'RuleBreak': 0, 'LaneChanging': 1,
@@ -176,6 +177,39 @@ class FeatureExtractor():
                                 template[i_temp, c_idx] = 1
         return template[1:]
 
+    def get_dict_for_info_json(self, output_dict, test_split=0.2):
+        """generates dictionary for data_info_new.json as required by OadTR.
+
+        Args:
+            output_dict (dict, str): dictionary object contaning the key 'annotations' or filepath to such a dictionary.
+            test_split (float, optional): relative share of the data used for evaluation. Defaults to 0.2.
+
+        Returns:
+            dictionary: dictionary with the keys ['class_index', 'train_session_set', 'test_session_set']
+        """
+        if isinstance(output_dict, str):
+            with open(output_dict, 'rb') as f:
+                output_dict = pickle.load(f)
+        
+        video_names = list(output_dict['annotations'].keys())
+        train, test = train_test_split(video_names, test_size=test_split)
+
+        seen_values = []
+        class_index = []
+        for k, v in self.labels_mapping.items():
+            if v in seen_values:
+                continue
+            else:
+                seen_values.append(v)
+                class_index.append(k)
+        
+        return {
+            'class_index': class_index,
+            'train_session_set': train,
+            'test_session_set': test
+            }
+
+
     def file_to_features(self, file_path):
         video_file_name = file_path[-29:]
         zip_file_name = video_file_name[:-4] + '.zip'
@@ -207,7 +241,7 @@ class FeatureExtractor():
                 }
         }, {video_file_name: annotation}
 
-    def dir_to_features(self, save=True, use_mp=False):
+    def dir_to_features(self, save=True):
         if use_mp: 
             warnings.warn('using multiprocessing with cuda is currently not supported', category=UserWarning, stacklevel=2)
             
@@ -227,50 +261,32 @@ class FeatureExtractor():
                        'annotations': dict()
                        }
 
-        if use_mp:
-            # pool = Pool(processes=cpu_count())
 
-            path_iterator = glob(self.vid_dir + '/*.MP4')
+        for file_path in tqdm(glob(self.vid_dir + '/*.MP4')):
+            try:
+                vid_features, vid_annot = self.file_to_features(file_path)
 
-            with Pool(processes=2) as p:
-                result_iterator = tqdm(p.imap_unordered(self.file_to_features, path_iterator), total=len(path_iterator), desc="Extracting features")
-
-                p.close()
-                p.join()
-
-            for result in result_iterator:
-                vid_features, vid_annot = result
                 if vid_features == None:
                     continue
+
                 output_dict['features'].update(vid_features)
                 output_dict['annotations'].update(vid_annot)
 
-        else:
-            for file_path in tqdm(glob(self.vid_dir + '/*.MP4')):
-                try:
-                    vid_features, vid_annot = self.file_to_features(file_path)
 
-                    if vid_features == None:
-                        continue
+                if save:
 
-                    output_dict['features'].update(vid_features)
-                    output_dict['annotations'].update(vid_annot)
+                    file_name = f'file_features_{file_path[-29:-4]}.pkl'
+                    vid_save = {'meta': general_informaion,
+                        'features': vid_features, 
+                        'annotations': vid_annot
+                        }
 
+                    with open(self.output_dir + file_name, 'wb') as file:
+                        pickle.dump(vid_save, file)
 
-                    if save:
-    
-                        file_name = f'file_features_{file_path[-29:-4]}.pkl'
-                        vid_save = {'meta': general_informaion,
-                            'features': vid_features, 
-                            'annotations': vid_annot
-                            }
-
-                        with open(self.output_dir + file_name, 'wb') as file:
-                            pickle.dump(vid_save, file)
-
-                except:
-                    self.error_file[file_path[-29:-4]] = 'catched by try-except block'
-                    continue
+            except:
+                self.error_file[file_path[-29:-4]] = 'catched by try-except block'
+                continue
 
         output_dict['error_file'] = self.error_file
         
@@ -282,8 +298,13 @@ class FeatureExtractor():
             with open(self.output_dir + file_name, 'wb') as file:
                 # use pickle to serialize the dictionary and write it to the file
                 pickle.dump(output_dict, file)
-                
-        return output_dict
+
+            json_dict = self.get_dict_for_info_json(output_dict)
+            with open(self.output_dir + 'data_info_new.json', 'w') as file:
+                json.dump(json_dict, file)
+        
+        return output_dict, json_dict
+
 
 
 if __name__ == '__main__':
