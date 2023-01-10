@@ -35,12 +35,12 @@ dependencies:
   - brotlipy=0.7.0=py39hb9d737c_1005
   - bzip2=1.0.8=h7f98852_4
   - c-ares=1.18.1=h7f98852_0
-  - ca-certificates=2022.07.19=h06a4308_0
+  - ca-certificates=2022.12.7=ha878542_0
   - cached-property=1.5.2=hd8ed1ab_1
   - cached_property=1.5.2=pyha770c72_1
   - cachetools=5.2.0=pyhd8ed1ab_0
   - cairo=1.16.0=ha61ee94_1014
-  - certifi=2022.6.15=py39h06a4308_0
+  - certifi=2022.12.7=pyhd8ed1ab_0
   - cffi=1.15.1=py39he91dace_3
   - charset-normalizer=2.1.1=pyhd8ed1ab_0
   - click=8.1.3=unix_pyhd8ed1ab_2
@@ -105,6 +105,7 @@ dependencies:
   - importlib-metadata=6.0.0=pyha770c72_0
   - importlib_metadata=6.0.0=hd8ed1ab_0
   - importlib_resources=5.10.2=pyhd8ed1ab_0
+  - ipdb=0.13.11=pyhd8ed1ab_0
   - ipykernel=6.19.4=pyh210e3f2_0
   - ipython=8.8.0=pyh41d4057_0
   - ipython_genutils=0.2.0=py_1
