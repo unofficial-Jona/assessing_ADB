@@ -246,4 +246,5 @@ dependencies:
   - astroid
   - pandas
   - matplotlib
+  - xmltodict
 prefix: /opt/conda/envs/thesis
