@@ -245,4 +245,5 @@ dependencies:
   - requests-oauthlib
   - astroid
   - pandas
+  - matplotlib
 prefix: /opt/conda/envs/thesis
