@@ -170,7 +170,8 @@ class FeatureExtractor():
                     xml_file['object'] = [xml_file['object']]
 
                 for obj in xml_file['object']:
-                    if obj['name'] != 'EgoVehicle':
+                    # exclude annotations for 'EgoVehicle'
+                    if obj['name'] == 'EgoVehicle':
                         continue
                     for attr in obj['attributes']['attribute']:
                         if 'GPSData' in attr:
