@@ -79,14 +79,13 @@ class FeatureExtractor():
         if 'labels' in kwargs.keys():
             self.labels = kwargs['labels']
         else:
-            self.labels = {'RuleBreak': {'WrongLane', 'WrongTurn', 'TrafficLight'}, 'LaneChanging': {'True'}, 'LaneChanging(m)': {
-                'True'}, 'OverTaking': {'True'}, 'Yield': {'True'}, 'Cutting': {'True'}, 'ZigzagMovement': {'True'}, 'OverSpeeding': {'True'}}
+            self.labels = {'LaneChanging': {'True'}, 'LaneChanging(m)': {'True'}, 'OverTaking': {'True'}, 'Cutting': {'True'}, 'OverSpeeding': {'True'}, 'WrongLane': {'WrongLane'}, 'WrongTurn':{'WrongTurn'}, 'TrafficLight':{'TrafficLight'}}
+        
         if 'labels_mapping' in kwargs.keys():
             warnings.warn('if labels are mapped to the same value only the first one will be mentioned in info_json', category=UserWarning, stacklevel=2)
             self.labels_mapping = kwargs['labels_mapping']
         else:
-            self.labels_mapping = {'RuleBreak': 0, 'LaneChanging': 1,
-                                   'LaneChanging(m)': 1, 'OverTaking': 2, 'Yield': 3, 'Cutting': 4, 'ZigzagMovement': 5, 'OverSpeeding': 6}
+            self.labels_mapping = {'OverTaking': 0, 'OverSpeeding': 1, 'LaneChanging(m)': 2, 'LaneChanging': 2, 'TrafficLight': 3, 'WrongLane': 4, 'WrongTurn': 5, 'Cutting': 6}
 
     def video_processor(self, video):
         frames, _, _ = read_video(video, pts_unit='sec', output_format='TCHW')
@@ -132,6 +131,14 @@ class FeatureExtractor():
 
     # '/workspace/pvc-meteor/downloads/Video XML Annotations'
     def annotation_processor(self, video_name):
+        """generates annotations
+
+        Args:
+            video_name (str): ending in .MP4
+
+        Returns:
+            dict: {'anno': np.array(annotations), 'feature_length': int(# of frames in 'anno')}
+        """
         zip_name = video_name[:-4] + '.zip'
         # check if name exist
 
@@ -139,13 +146,12 @@ class FeatureExtractor():
             self.error_file[video_name] = 'zip file not found'
             return None
 
-
         else:
             # load zip object
             zip_file = ZipFile(os.path.join(self.anno_zip_dir, zip_name))
             nr_frames = len([i for i in zip_file.namelist() if '.xml' in i])
             nr_frames = np.floor(nr_frames / self.frame_interval).astype(int)
-            template = np.zeros((nr_frames, 7))
+            template = np.zeros((nr_frames, max(self.labels_mapping.values) + 1))
 
             append_folder = 'Annotations/' in zip_file.namelist()
             # iterate through key-frames
@@ -154,8 +160,7 @@ class FeatureExtractor():
                 frame_name = 'Annotations/' + \
                     frame_name if append_folder else f'{zip_name[:-4]}/Annotations/' + frame_name
 
-                xml_file = xmltodict.parse(zip_file.read(frame_name))[
-                    'annotation']
+                xml_file = xmltodict.parse(zip_file.read(frame_name))['annotation']
 
                 if 'object' not in xml_file:
                     # behave as if no file found
@@ -170,12 +175,31 @@ class FeatureExtractor():
                     for attr in obj['attributes']['attribute']:
                         if 'GPSData' in attr:
                             continue
+                        
+                        n_v = str()
+
+                        if attr['name'] in self.labels_mapping.keys():
+                            n_v = attr['name']
+                        elif attr['value'] in self.labels_mapping.keys():
+                            n_v = attr['value']
+                        else:
+                            continue
+                            
+                        c_idx = self.labels_mapping[n_v]
+                        template[i_temp, c_idx] = 1
+
+                        '''
                         if attr['name'] in self.labels:
                             if attr['value'] in self.labels[attr['name']]:
                                 c_idx = self.labels_mapping[attr['name']]
-
                                 template[i_temp, c_idx] = 1
-        return template[1:]
+                        elif attr['name'] == 'RuleBreak':
+                            print(attr['name'], attr['value'])
+                            if attr['value'] in self.labels[attr['value']]:
+                                c_idx = self.labels_mapping[attr['value']]
+                                template[i_temp, c_idx] = 1
+                        '''
+        return {'anno':template[1:], 'feature_length':template[1:].shape[0]}
 
     def get_dict_for_info_json(self, output_dict, test_split=0.2):
         """generates dictionary for data_info_new.json as required by OadTR.
@@ -210,7 +234,7 @@ class FeatureExtractor():
             }
 
 
-    def file_to_features(self, file_path):
+    def file_processing(self, file_path):
         video_file_name = file_path[-29:]
         zip_file_name = video_file_name[:-4] + '.zip'
 
@@ -241,7 +265,7 @@ class FeatureExtractor():
                 }
         }, {video_file_name: annotation}
 
-    def dir_to_features(self, save=True):
+    def dir_processing(self, save=True):
         if use_mp: 
             warnings.warn('using multiprocessing with cuda is currently not supported', category=UserWarning, stacklevel=2)
             
@@ -256,21 +280,19 @@ class FeatureExtractor():
             'extraction_time': start_time
             }
 
-        output_dict = {'meta': general_informaion,
-                       'features': dict(), 
-                       'annotations': dict()
-                       }
+        feature_dict = dict()
+        annotation_dict = dict()
 
 
         for file_path in tqdm(glob(self.vid_dir + '/*.MP4')):
             try:
-                vid_features, vid_annot = self.file_to_features(file_path)
+                vid_features, vid_annot = self.file_processing(file_path)
 
                 if vid_features == None:
                     continue
 
-                output_dict['features'].update(vid_features)
-                output_dict['annotations'].update(vid_annot)
+                feature_dict.update(vid_features)
+                annotation_dict.update(vid_annot)
 
 
                 if save:
@@ -288,11 +310,26 @@ class FeatureExtractor():
                 self.error_file[file_path[-29:-4]] = 'catched by try-except block'
                 continue
 
-        output_dict['error_file'] = self.error_file
+        output_dict = {
+            'meta': general_information,
+            'features': feature_dict,
+            'annotations': annotation_dict,
+            'error_file': self.error_file 
+        }
         
         if save:
             # create the file name using the start_time and extracted_features variables
-            file_name = f'extracted_features_{start_time}.pkl'
+            file_name = f'extraction_output_{start_time}.pkl'
+            anno_name = f'annotations_{start_time}.pkl'
+            feature_name = f'annotations_{start_time}.pkl'
+            
+            with open(self.output_dir + anno_name, 'wb') as file:
+                # use pickle to serialize the dictionary and write it to the file
+                pickle.dump(annotation_dict, file)
+
+            with open(self.output_dir + feature_name, 'wb') as file:
+                # use pickle to serialize the dictionary and write it to the file
+                pickle.dump(feature_dict, file)
 
             # open the file in write mode
             with open(self.output_dir + file_name, 'wb') as file:
