@@ -79,7 +79,7 @@ class FeatureExtractor():
         if 'labels' in kwargs.keys():
             self.labels = kwargs['labels']
         else:
-            self.labels = {'LaneChanging': {'True'}, 'LaneChanging(m)': {'True'}, 'OverTaking': {'True'}, 'Cutting': {'True'}, 'OverSpeeding': {'True'}, 'WrongLane': {'WrongLane'}, 'WrongTurn':{'WrongTurn'}, 'TrafficLight':{'TrafficLight'}}
+            self.labels = {'LaneChanging': {'True'}, 'LaneChanging(m)': {'True'}, 'OverTaking': {'True'}, 'Cutting': {'True'}, 'OverSpeeding': {'True'},'RuleBreak':{'WrongLane', 'WrongTurn', 'TrafficLight'}, 'WrongLane': {'WrongLane'}, 'WrongTurn':{'WrongTurn'}, 'TrafficLight':{'TrafficLight'}}
         
         if 'labels_mapping' in kwargs.keys():
             warnings.warn('if labels are mapped to the same value only the first one will be mentioned in info_json', category=UserWarning, stacklevel=2)
@@ -151,7 +151,7 @@ class FeatureExtractor():
             zip_file = ZipFile(os.path.join(self.anno_zip_dir, zip_name))
             nr_frames = len([i for i in zip_file.namelist() if '.xml' in i])
             nr_frames = np.floor(nr_frames / self.frame_interval).astype(int)
-            template = np.zeros((nr_frames, max(self.labels_mapping.values) + 1))
+            template = np.zeros((nr_frames, max(self.labels_mapping.values()) + 1))
 
             append_folder = 'Annotations/' in zip_file.namelist()
             # iterate through key-frames
@@ -177,6 +177,17 @@ class FeatureExtractor():
                         if 'GPSData' in attr:
                             continue
                         
+                        if attr['name'] in self.labels.keys() and attr['value'] == self.labels[attr['name']]:
+                            if attr['name'] == 'RuleBreak':
+                                c_idx = self.labels_mapping[attr['value']]
+                                template[i_temp, c_idx] = 1
+                            elif attr['name'] in self.labels.keys():
+                                c_idx = self.labels_mapping[attr['name']]
+                                template[i_temp, c_idx] = 1
+                            else:
+                                continue
+
+                        '''
                         n_v = str()
 
                         if attr['name'] in self.labels_mapping.keys():
@@ -189,7 +200,7 @@ class FeatureExtractor():
                         c_idx = self.labels_mapping[n_v]
                         template[i_temp, c_idx] = 1
 
-                        '''
+                        
                         if attr['name'] in self.labels:
                             if attr['value'] in self.labels[attr['name']]:
                                 c_idx = self.labels_mapping[attr['name']]
