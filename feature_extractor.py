@@ -174,13 +174,14 @@ class FeatureExtractor():
                     if obj['name'] == 'EgoVehicle':
                         continue
                     for attr in obj['attributes']['attribute']:
-                        if 'GPSData' in attr:
+                        if attr['name'] not in self.labels.keys():
                             continue
-                        
-                        if attr['name'] in self.labels.keys() and attr['value'] == self.labels[attr['name']]:
+
+                        if attr['name'] in self.labels.keys() and attr['value'] in self.labels[attr['name']]:
                             if attr['name'] == 'RuleBreak':
                                 c_idx = self.labels_mapping[attr['value']]
                                 template[i_temp, c_idx] = 1
+                                # print(f'vid_name: {video_name}, frame: {i_frame * 2}, obj: {obj["name"]}, name: {attr["name"]}, value: {attr["value"]}, c_idx: {c_idx}')
                             elif attr['name'] in self.labels.keys():
                                 c_idx = self.labels_mapping[attr['name']]
                                 template[i_temp, c_idx] = 1
