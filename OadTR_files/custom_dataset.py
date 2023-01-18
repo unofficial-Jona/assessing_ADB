@@ -4,11 +4,12 @@ import torch
 import torch.utils.data as data
 import numpy as np
 
-class METEORDataLayer(data.Daatset):
+class METEORDataLayer(data.Dataset):
     def __init__(self, args, phase='train') -> None:
         self.data_root = '../../pvc-meteor/features'
         self.pickle_root = '../../pvc-meteor/features'
         self.sessions = getattr(args,phase + '_session_set') # used to get video names from json file
+        self.enc_steps = args.enc_layers
         self.encoder_steps = args.enc_layers
         self.numclass = args.numclass
         self.dec_steps = args.query_num
@@ -64,10 +65,10 @@ class METEORDataLayer(data.Daatset):
                 ])'''
         session, start, end, enc_target, distance_target, class_h_target, dec_target = self.inputs[index]
         
-        camera_inputs = self.feature_All[session]['rgb'][start:end]
+        camera_inputs = self.feature_all[session]['rgb'][start:end]
         camera_inputs = torch.tensor(camera_inputs)
         
-        motion_inputs = self.feature_All[session]['flow'][start:end]
+        motion_inputs = self.feature_all[session]['flow'][start:end]
         motion_inputs = torch.tensor(motion_inputs)
         
         enc_target = torch.tensor(enc_target)
@@ -79,4 +80,3 @@ class METEORDataLayer(data.Daatset):
 
     def __len__(self):
         return len(self.inputs)
-
