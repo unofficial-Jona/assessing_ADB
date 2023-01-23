@@ -1,3 +1,6 @@
+# Code is mainly coppied from the original repository: https://github.com/wangxiang1230/OadTR
+
+
 # OadTR
 Code for our ICCV2021 paper: "OadTR: Online Action Detection with Transformers" [["Paper"]](https://arxiv.org/pdf/2106.11149.pdf)
 
