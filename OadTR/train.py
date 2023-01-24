@@ -133,8 +133,8 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
 
         enc_score_p0, dec_scores = model(camera_inputs, motion_inputs)
         
-        print('check shape of enc_scor_p0, dec_scores, class_h_target and dec_target')
-        set_trace()
+        # print('check shape of enc_scor_p0, dec_scores, class_h_target and dec_target')
+        # set_trace()
 
         outputs = {
             'labels_encoder': enc_score_p0,  # [128, 22]
@@ -222,20 +222,20 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
         logger.output_print(str(all_classes.shape))  # (8, 180489)
         results = {'probs': all_probs, 'labels': all_classes}
 
-        map, aps, _, _ = utils.frame_level_map_n_cap(results)
+        map, aps, _, _ = util.frame_level_map_n_cap_tvseries(results)
         logger.output_print('[Epoch-{}] [IDU-{}] mAP: {:.4f}\n'.format(epoch, feat_type, map))
 
         results_dec = {}
         results_dec['probs'] = np.asarray(dec_score_metrics).T
         results_dec['labels'] = np.asarray(dec_target_metrics).T
-        dec_map_2, dec_aps_2, _, _ = util.frame_level_map_n_cap_thumos(results_dec)
+        dec_map_2, dec_aps_2, _, _ = util.frame_level_map_n_cap_tvseries(results_dec)
         logger.output_print('dec_mAP all together: | {} |.'.format(dec_map_2))
         all_decoder = 0.
         for iii in range(num_query):
             results_dec = {}
             results_dec['probs'] = np.asarray(dec_score_metrics_every[str(iii)]).T
             results_dec['labels'] = np.asarray(dec_target_metrics_every[str(iii)]).T
-            dec_map_2, dec_aps_2, _, _ = util.frame_level_map_n_cap_thumos(results_dec)
+            dec_map_2, dec_aps_2, _, _ = util.frame_level_map_n_cap_tvseries(results_dec)
             logger.output_print('dec_mAP_pred | {} : {} |.'.format(iii, dec_map_2))
             all_decoder += dec_map_2
         logger.output_print('{}: | {:.4f} |.'.format('all decoder map', all_decoder/num_query))

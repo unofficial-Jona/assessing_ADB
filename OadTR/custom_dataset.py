@@ -6,8 +6,8 @@ import numpy as np
 
 class METEORDataLayer(data.Dataset):
     def __init__(self, args, phase='train') -> None:
-        self.data_root = '../../pvc-meteor/features'
-        self.pickle_root = '../../pvc-meteor/features'
+        self.data_root = '../../../pvc-meteor/features'
+        self.pickle_root = '../../../pvc-meteor/features'
         self.sessions = getattr(args,phase + '_session_set') # used to get video names from json file
         self.enc_steps = args.enc_layers
         self.encoder_steps = args.enc_layers
