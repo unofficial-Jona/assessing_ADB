@@ -183,7 +183,7 @@ def main(args):
                      'n_parameters': n_parameters}
 
         if args.output_dir and utils.is_main_process():
-            with (output_dir / "log_tran&test.txt").open("a") as f:
+            with (output_dir / "log_train&test.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
 
     total_time = time.time() - start_time
@@ -201,10 +201,19 @@ if __name__ == '__main__':
     args.test_session_set = data_info['test_session_set']
     args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
-    if args.output_dir:
-        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-        
-    # set ups for experiments:   
-    args.lr = 1
     
-    main(args)
+    args.lr_drop = 20
+    args.epochs = 11 # parameter is used in range(1, args.epochs) --> 10 iterations
+
+
+    
+    # set ups for experiments:   
+    for encoder_layers in [2,3,4]:
+        for decoder_layers in [4,5,6]:
+            args.output_dir = f'models/experiments/enc_layers_{encoder_layers}_dec_layers_{decoder_layers}'
+            Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+            
+            args.num_layers = encoder_layers
+            args.decoder_layers = decoder_layers
+            
+            main(args)

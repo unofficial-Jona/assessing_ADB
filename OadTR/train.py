@@ -221,9 +221,9 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
         all_classes = np.asarray(all_classes).T
         logger.output_print(str(all_classes.shape))  # (8, 180489)
         results = {'probs': all_probs, 'labels': all_classes}
-        set_trace()
-        map, aps, _, _ = util.frame_level_map_n_cap_tvseries(results)
-        logger.output_print('[Epoch-{}] [IDU-{}] mAP: {:.4f}\n'.format(epoch, feat_type, map))
+        # set_trace()
+        map, aps, cap, caps = util.frame_level_map_n_cap_tvseries(results)
+        logger.output_print('[Epoch-{}] [IDU-{}] mAP: {:.4f} cAP: {:.4f}\n'.format(epoch, feat_type, map, cap))
 
         results_dec = {}
         results_dec['probs'] = np.asarray(dec_score_metrics).T
@@ -240,9 +240,9 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
             all_decoder += dec_map_2
         logger.output_print('{}: | {:.4f} |.'.format('all decoder map', all_decoder/num_query))
 
-        for i, ap in enumerate(aps):
+        for i, ap in enumerate(zip(aps, caps)):
             cls_name = args.all_class_name[i]
-            logger.output_print('{}: {:.4f}'.format(cls_name, ap))
+            logger.output_print('{}: ap = {:.4f}, cap = {:.4f}'.format(cls_name, ap[0], ap[1]))
     stats = {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
     return stats

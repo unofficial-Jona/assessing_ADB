@@ -20,7 +20,7 @@ def get_args_parser():
     parser.add_argument('--weight_decay', default=1e-4, type=float)
     parser.add_argument('--epochs', default=5, type=int)
     parser.add_argument('--resize_feature', default=False, type=str2bool, help='run resize prepare_data or not')
-    parser.add_argument('--lr_drop', default=2, type=int)
+    parser.add_argument('--lr_drop', default=1, type=int)
     parser.add_argument('--clip_max_norm', default=1., type=float,
                         help='gradient clipping max norm')  # dataparallel
     parser.add_argument('--dataparallel', action='store_true', help='multi-gpus for training')
