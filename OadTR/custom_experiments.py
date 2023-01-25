@@ -204,7 +204,7 @@ if __name__ == '__main__':
     
     args.lr_drop = 20
     args.epochs = 11 # parameter is used in range(1, args.epochs) --> 10 iterations
-
+    args.batch_size = 256
 
     
     # set ups for experiments:   
