@@ -197,8 +197,8 @@ if __name__ == '__main__':
         data_info = json.load(f)['METEOR']
     args.train_session_set = data_info['train_session_set']
     args.test_session_set = data_info['test_session_set']
-    args.class_index = data_info['class_index']
-    args.numclass = len(args.class_index)
+    args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
+    args.numclass = len(args.all_class_name)
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)

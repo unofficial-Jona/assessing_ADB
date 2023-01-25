@@ -19,7 +19,7 @@ import numpy as np
 
 
 all_class_name = ['OverTaking',
-                  'Overspeeding',
+                  'OverSpeeding',
                   'LaneChange',
                   'TrafficLight',
                   'WrongLane',
@@ -38,7 +38,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     # metric_logger.add_meter('class_error', utils.SmoothedValue(window_size=1, fmt='{value:.2f}'))
     header = 'Epoch: [{}]'.format(epoch)
     print_freq = 500
-    num_class = 7
+    num_class = 4
     for camera_inputs, motion_inputs, enc_target, distance_target, class_h_target, dec_target in metric_logger.log_every(data_loader, print_freq, header):
         
         
@@ -121,7 +121,7 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
 
     num_class = args.numclass
     feat_type = args.feature
-
+        
     for camera_inputs_val, motion_inputs_val, enc_target_val, distance_target_val, class_h_target_val, dec_target in metric_logger.log_every(data_loader, 500, header):
         camera_inputs = camera_inputs_val.to(device)
         motion_inputs = motion_inputs_val.to(device)
@@ -177,7 +177,7 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
             # t0_class_batch = class_h_target.detach().cpu().numpy()  # class_h_target[:, :8].cpu().numpy()
             all_classes.extend(class_h_target[:, :].detach().cpu().numpy())
             # set_trace()
-        else:
+        else:   
             # prob_val = enc_score_p0[:, :8].cpu().numpy()
             prob_val = F.softmax(enc_score_p0[:, :], dim=-1).cpu().numpy()
             # prob_val = F.softmax(enc_score_p0, dim=-1)[:, :8].cpu().numpy()  
@@ -207,11 +207,11 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
             logger.output_print(str(all_classes.shape))  # (8, 180489)
             results = {'probs': all_probs, 'labels': all_classes}
 
-            map, aps, _, _ = utils.frame_level_map_n_cap(results)
+            map, aps, _, _ = utils.frame_level_map_n_cap_tv_series(results)
             logger.output_print('[Epoch-{}] [IDU-{}] mAP: {:.4f}\n'.format(epoch, feat_type, map))
 
             for i, ap in enumerate(aps):
-                cls_name = all_class_name[i]
+                cls_name = args.all_class_name[i]
                 logger.output_print('{}: {:.4f}'.format(cls_name, ap))
     else:
         # results
@@ -221,7 +221,7 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
         all_classes = np.asarray(all_classes).T
         logger.output_print(str(all_classes.shape))  # (8, 180489)
         results = {'probs': all_probs, 'labels': all_classes}
-
+        set_trace()
         map, aps, _, _ = util.frame_level_map_n_cap_tvseries(results)
         logger.output_print('[Epoch-{}] [IDU-{}] mAP: {:.4f}\n'.format(epoch, feat_type, map))
 
@@ -241,8 +241,7 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
         logger.output_print('{}: | {:.4f} |.'.format('all decoder map', all_decoder/num_query))
 
         for i, ap in enumerate(aps):
-            cls_name = all_class_name[i]
-            print('printing from train')
+            cls_name = args.all_class_name[i]
             logger.output_print('{}: {:.4f}'.format(cls_name, ap))
     stats = {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 

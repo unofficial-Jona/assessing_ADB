@@ -6,6 +6,8 @@ import numpy as np
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import confusion_matrix
 
+from ipdb import set_trace
+
 __all__ = [
     'compute_result_multilabel',
     'compute_result_multilabel_test',
@@ -113,16 +115,20 @@ def frame_level_map_n_cap_thumos(results):
 
 
 def frame_level_map_n_cap_tvseries(results):
+    # set_trace()
     all_probs = results['probs']
     all_labels = results['labels']
     # for i in range(1, all_probs.shape[1] - 1):
     #     all_probs[:, i] = np.mean(all_probs[:, i - 1:i + 1], axis=1)
     n_classes = all_labels.shape[0]
     all_cls_ap, all_cls_acp = list(), list()
-    for i in range(1, n_classes):
+    for i in range(n_classes):
         this_cls_prob = all_probs[i, :]
         this_cls_gt = all_labels[i, :]
-        w = np.sum(this_cls_gt == 0) / np.sum(this_cls_gt == 1)
+        if np.sum(this_cls_gt == 1) == 0:
+            w = 0
+        else:
+            w = np.sum(this_cls_gt == 0) / np.sum(this_cls_gt == 1)
 
         indices = np.argsort(-this_cls_prob)
         tp, psum, cpsum = 0, 0., 0.
@@ -133,8 +139,12 @@ def frame_level_map_n_cap_tvseries(results):
                 fp = (k + 1) - tp
                 psum += tp / (tp + fp)
                 cpsum += wtp / (wtp + fp)
-        this_cls_ap = psum/np.sum(this_cls_gt)
-        this_cls_acp = cpsum / np.sum(this_cls_gt)
+        if np.sum(this_cls_gt) == 0:
+            this_cls_ap = 0
+            this_cls_acp = 0
+        else:
+            this_cls_ap = psum/np.sum(this_cls_gt)
+            this_cls_acp = cpsum / np.sum(this_cls_gt)
 
         all_cls_ap.append(this_cls_ap)
         all_cls_acp.append(this_cls_acp)

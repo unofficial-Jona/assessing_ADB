@@ -37,12 +37,7 @@ class SetCriterion(nn.Module):
         self.size_average = True
         self.logsoftmax = nn.LogSoftmax(dim=1)
         
-        self.use_weights = args.use_loss_w
-        if args.use_loss_w:
-            self.loss_fn = nn.BCEWithLogitsLoss(pos_weight = torch.tensor([2.4984e+00, 2.8813e+03, 9.8837e+00, 1.9020e+03, 2.5998e+01, 4.6269e+03,
-        1.0296e+02], dtype=torch.float64).to(args.device)).to(args.device)
-        else:
-            self.loss_fn = nn.BCEWithLogitsLoss().to(args.device)
+        self.loss_fn = nn.BCEWithLogitsLoss().to(args.device)
 
     def loss_labels(self, input, targets, name):
         """Classification loss (NLL)

@@ -4,6 +4,8 @@ import torch
 import torch.utils.data as data
 import numpy as np
 
+import warnings
+
 class METEORDataLayer(data.Dataset):
     def __init__(self, args, phase='train') -> None:
         self.data_root = '../../../pvc-meteor/features'
@@ -15,15 +17,28 @@ class METEORDataLayer(data.Dataset):
         self.dec_steps = args.query_num
         self.training = phase == 'train'
         self.inputs = list()
-
+        
         # load annotation file based on phase
         self.subnet = 'train' if self.training else 'test'
         target_all = pickle.load(open(osp.join(self.pickle_root, f'target_METEOR_{self.subnet}.pickle'), 'rb'))
-        
-        
 
+        assert not (args.use_frequent and args.use_infrequent), "can't select frequent and infrequent categories at the same time"
+        
+        # define index that should be used
+        if args.use_frequent:
+            self.use_idx = [0,2,4,6]
+        
+        elif args.use_infrequent:
+            warnings.warn("args.all_class_names (defined in main) may needs to be updated.")
+            self.use_idx = [1,3,5]
+        
+        else:
+            warnings.warn("args.all_class_names (defined in main) may needs to be updated.")
+            self.use_idx = [0,1,2,3,4,5,6]
+            
+        # load and prepare annotations
         for session in self.sessions:
-            target = target_all[session]['anno']
+            target = target_all[session]['anno'][:, self.use_idx]
             seed = np.random.randint(self.enc_steps) if self.training else 0
             for start, end in zip(
                     range(seed, target.shape[0], 1),  # self.enc_steps
@@ -37,6 +52,7 @@ class METEORDataLayer(data.Dataset):
                         session, start, end, enc_target, distance_target, class_h_target, dec_target
                     ])
 
+        # load features
         self.feature_all = pickle.load(open(osp.join(self.pickle_root, f'feature_METEOR_{self.subnet}.pickle'), 'rb'))
         
                     

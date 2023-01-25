@@ -20,7 +20,7 @@ def get_args_parser():
     parser.add_argument('--weight_decay', default=1e-4, type=float)
     parser.add_argument('--epochs', default=5, type=int)
     parser.add_argument('--resize_feature', default=False, type=str2bool, help='run resize prepare_data or not')
-    parser.add_argument('--lr_drop', default=5, type=int)
+    parser.add_argument('--lr_drop', default=2, type=int)
     parser.add_argument('--clip_max_norm', default=1., type=float,
                         help='gradient clipping max norm')  # dataparallel
     parser.add_argument('--dataparallel', action='store_true', help='multi-gpus for training')
@@ -79,7 +79,6 @@ def get_args_parser():
     parser.add_argument('--classification_h_loss_coef', default=1, type=float)
     parser.add_argument('--similar_loss_coef', default=0.1, type=float)   # 0.3
     parser.add_argument('--margin', default=1., type=float)
-    parser.add_argument('--use_loss_w', default=True, type=str2bool, help="The weight values are specified in the Criterion class.")
 
     # dataset parameters
     parser.add_argument('--dataset_file', type=str, default='../../../pvc-meteor/features/METEOR_info.json')
@@ -101,7 +100,9 @@ def get_args_parser():
 
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--num_workers', default=8, type=int)
-
+    parser.add_argument('--use_frequent', default='True', type=str2bool, help='if True will select ["OverTaking", "LaneChange", "WrongLane", "Cutting"]')
+    parser.add_argument('--use_infrequent', default='False', type=str2bool, help='if True will select ["OverSpeeding", "TrafficLight", "WrongTurn"]')
+    
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
