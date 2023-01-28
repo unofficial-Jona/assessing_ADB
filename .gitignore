@@ -5,7 +5,6 @@ __pycache__/
 
 # model checkpoints
 checkpoint*
-!checkpoint.pth
 
 # C extensions
 *.so
