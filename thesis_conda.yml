@@ -251,4 +251,5 @@ dependencies:
   - h5py
   - tensorflow-base
   - pytorch
+  - av
 prefix: /opt/conda/envs/thesis
