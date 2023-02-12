@@ -201,10 +201,10 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
         # results
         if utils.is_main_process():
             all_probs = np.asarray(all_probs).T
-            logger.output_print(str(all_probs.shape))  # (8, 180489)
+            # logger.output_print(str(all_probs.shape))  # (8, 180489)
 
             all_classes = np.asarray(all_classes).T
-            logger.output_print(str(all_classes.shape))  # (8, 180489)
+            # logger.output_print(str(all_classes.shape))  # (8, 180489)
             results = {'probs': all_probs, 'labels': all_classes}
 
             map, aps, _, _ = utils.frame_level_map_n_cap_tv_series(results)
@@ -216,10 +216,10 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
     else:
         # results
         all_probs = np.asarray(all_probs).T
-        logger.output_print(str(all_probs.shape))  # (8, 180489)
+        # logger.output_print(str(all_probs.shape))  # (8, 180489)
 
         all_classes = np.asarray(all_classes).T
-        logger.output_print(str(all_classes.shape))  # (8, 180489)
+        # logger.output_print(str(all_classes.shape))  # (8, 180489)
         results = {'probs': all_probs, 'labels': all_classes}
         # set_trace()
         map, aps, cap, caps = util.frame_level_map_n_cap_tvseries(results)

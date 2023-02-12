@@ -201,10 +201,17 @@ if __name__ == '__main__':
     args.test_session_set = data_info['test_session_set']
     args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
-    if args.output_dir:
-        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-        
-    # set ups for experiments:   
-    args.lr = 1
+    
+
+    # weighted loss with most promising architecture
+    args.output_dir = 'experiments/weighted_loss_enc_layers_4_dec_layers_6'
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    args.weighted_loss = False
+    args.num_layers = 4
+    args.decoder_layers = 6
+    args.epochs = 5
+    args.weighted_loss = True
     
     main(args)
+    
+    # TODO: set up experiment without optical flow features
