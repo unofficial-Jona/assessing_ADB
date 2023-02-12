@@ -75,8 +75,9 @@ def main(args):
                                                  dropout_rate=args.dropout_rate,
                                                  attn_dropout_rate=args.attn_dropout_rate,
                                                  num_channels=args.dim_feature,
-                                                 positional_encoding_type=args.positional_encoding_type
-                                                 )
+                                                 positional_encoding_type=args.positional_encoding_type,
+                                                 with_motion=args.use_flow
+                                                   )
 
     model.to(device)
 
@@ -202,16 +203,30 @@ if __name__ == '__main__':
     args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
     
-
-    # weighted loss with most promising architecture
-    args.output_dir = 'experiments/weighted_loss_enc_layers_4_dec_layers_6'
+    
+    
+    
+    
+    
+    # weighted loss with most deep architecture
+    args.output_dir = 'experiments/att_back/weig_loss_enc_4_dec_6'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    args.weighted_loss = False
     args.num_layers = 4
     args.decoder_layers = 6
-    args.epochs = 5
+    args.epochs = 10
     args.weighted_loss = True
     
     main(args)
     
     # TODO: set up experiment without optical flow features
+    args.output_dir = 'experiments/att_back/weig_loss_enc_4_dec_6_no_flow'
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    args.num_layers = 4
+    args.decoder_layers = 6
+    args.epochs = 10
+    args.weighted_loss = True
+    args.use_flow=False
+    args.dim_feature=1024
+    
+    main(args)
+    

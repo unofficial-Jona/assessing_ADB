@@ -25,6 +25,7 @@ def get_args_parser():
                         help='gradient clipping max norm')  # dataparallel
     parser.add_argument('--dataparallel', action='store_true', help='multi-gpus for training')
     parser.add_argument('--removelog', action='store_true', help='remove old log')
+    parser.add_argument('--use_flow', default=True, type=str2bool, help='use optical flow in model')
 
     # * Network
     parser.add_argument('--version', default='v3', type=str,
@@ -51,7 +52,7 @@ def get_args_parser():
                         help="lr_backbone")
     parser.add_argument('--feature', default='Anet2016_feature_v2', type=str,
                         help="feature type")
-    parser.add_argument('--dim_feature', default=4096, type=int,
+    parser.add_argument('--dim_feature', default=2048, type=int,
                         help="input feature dims")
     parser.add_argument('--patch_dim', default=1, type=int,
                         help="input feature dims")

@@ -25,7 +25,7 @@ from torchvision.io import read_video
 import torch
 
 
-from prepare_feat_ext import model as flow_model
+# from prepare_feat_ext import model as flow_model
 
 import pdb
 
@@ -53,7 +53,7 @@ class FeatureExtractor():
             self.transforms = flow_weights.transforms()
 
         else:
-            self.flow_model = flow_model.to(self.device)
+            self.flow_model = raft_large(weights=Raft_Large_Weights.DEFAULT)
             for param in self.flow_model.parameters():
                 param.requires_grad = False
             self.flow_model.eval()
@@ -338,7 +338,7 @@ class FeatureExtractor():
             with open(self.output_dir + 'features_METEOR_test.pickle', 'wb') as f:
                 pickle.dump(test, f)
                 
-            train, test = split_according_to_json(json_file, output_dict['annotations'])
+            train, test = self.split_according_to_json(output_dict['annotations'])
             
             with open(self.output_dir + 'target_METEOR_train.pickle', 'wb') as f:
                 pickle.dump(train, f)
