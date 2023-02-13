@@ -52,60 +52,8 @@ def main(args):
             continue
         logger.output_print("{}:{}".format(arg, getattr(args, arg)))
 
-    # print(args)
-    # set devise
-    if args.distributed:
-        print('args.gpu : ', args.gpu)
-        torch.cuda.set_device(args.gpu)
-    device = torch.device(args.device)
 
-    # fix the seed for reproducibility
-    seed = args.seed + utils.get_rank()
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-
-    model = transformer_models.VisionTransformer_v3(args=args, img_dim=args.enc_layers,   # VisionTransformer_v3
-                                                 patch_dim=args.patch_dim,
-                                                 out_dim=args.numclass,
-                                                 embedding_dim=args.embedding_dim,
-                                                 num_heads=args.num_heads,
-                                                 num_layers=args.num_layers,
-                                                 hidden_dim=args.hidden_dim,
-                                                 dropout_rate=args.dropout_rate,
-                                                 attn_dropout_rate=args.attn_dropout_rate,
-                                                 num_channels=args.dim_feature,
-                                                 positional_encoding_type=args.positional_encoding_type,
-                                                 with_motion=args.use_flow
-                                                   )
-
-    model.to(device)
-
-    summary(model) # , input_size = (args.batch_size, 1024, 2))
-    
-    loss_need = [
-        'labels_encoder',
-        'labels_decoder',
-    ]
-    criterion = utl.SetCriterion(num_classes=args.numclass, losses=loss_need, args=args).to(device)
-
-    model_without_ddp = model
-    if args.distributed:
-        # torch.cuda.set_device(args.gpu)
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
-        model_without_ddp = model.module
-    elif args.dataparallel:
-        args.gpu = '0,1,2,3'
-        model = nn.DataParallel(model, device_ids=[int(iii) for iii in args.gpu.split(',')])
-    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.output_print('number of params: {}'.format(n_parameters))
-    # logger.output_print(args)
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,
-                                 weight_decay=args.weight_decay,
-                                 )
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=args.lr_drop_size)
-
+    # prepare data_loader
     dataset_train = METEORDataLayer(phase='train', args=args)
     dataset_val = METEORDataLayer(phase='test', args=args)
 
@@ -126,11 +74,74 @@ def main(args):
     data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
                                  drop_last=False, pin_memory=True, num_workers=args.num_workers)
 
+    
+    # set device
+    if args.distributed:
+        print('args.gpu : ', args.gpu)
+        torch.cuda.set_device(args.gpu)
+    device = torch.device(args.device)
+
+    # fix the seed for reproducibility
+    seed = args.seed + utils.get_rank()
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+    # prepare model
+    model = transformer_models.VisionTransformer_v3(args=args, img_dim=args.enc_layers,   # VisionTransformer_v3
+                                                 patch_dim=args.patch_dim,
+                                                 out_dim=args.numclass,
+                                                 embedding_dim=args.embedding_dim,
+                                                 num_heads=args.num_heads,
+                                                 num_layers=args.num_layers,
+                                                 hidden_dim=args.hidden_dim,
+                                                 dropout_rate=args.dropout_rate,
+                                                 attn_dropout_rate=args.attn_dropout_rate,
+                                                 num_channels=args.dim_feature,
+                                                 positional_encoding_type=args.positional_encoding_type,
+                                                 with_motion=args.use_flow
+                                                   )
+
+    model.to(device)
+
+    summary(model) # , input_size = (args.batch_size, 1024, 2))
+    
+    # prepare loss
+    loss_need = [
+        'labels_encoder',
+        'labels_decoder',
+    ]
+    
+    criterion = utl.SetCriterion(num_classes=args.numclass, losses=loss_need, args=args).to(device)
+
+    # set up distribution and 
+    model_without_ddp = model
+    if args.distributed:
+        # torch.cuda.set_device(args.gpu)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+        model_without_ddp = model.module
+    elif args.dataparallel:
+        args.gpu = '0,1,2,3'
+        model = nn.DataParallel(model, device_ids=[int(iii) for iii in args.gpu.split(',')])
+    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.output_print('number of params: {}'.format(n_parameters))
+    # logger.output_print(args)
+
+    # set up optimizer
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,
+                                 weight_decay=args.weight_decay,
+                                 )
+    # set up lr_scheduler
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=args.lr_drop_size)
+
+    
     if args.frozen_weights is not None:
         checkpoint = torch.load(args.frozen_weights, map_location='cpu')
         model_without_ddp.detr.load_state_dict(checkpoint['model'])
 
     output_dir = Path(args.output_dir)
+
+    # load checkpoint
     if args.resume:
         if args.resume.startswith('https'):
             checkpoint = torch.hub.load_state_dict_from_url(
@@ -149,7 +160,8 @@ def main(args):
         with torch.no_grad():
             test_stats = test_one_epoch(model, criterion, data_loader_val, device, logger, args, epoch=0, nprocs=4)
         return
-
+    
+    # training
     print("Start training")
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
@@ -206,11 +218,7 @@ if __name__ == '__main__':
     args.numclass = len(args.all_class_name)
     
     
-    
-    
-    
-    
-    # weighted loss with most deep architecture
+    # reduce overfitting(hopefully)
     args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_overfit_try'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     args.num_layers = 2
