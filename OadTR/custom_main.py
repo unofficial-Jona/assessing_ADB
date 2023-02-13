@@ -35,14 +35,14 @@ def main(args):
                 print('remove logs !')
                 if os.path.exists(os.path.join(this_dir, 'log_dist.txt')):
                     os.remove(os.path.join(this_dir, 'log_dist.txt'))
-                if os.path.exists(Path(args.output_dir) / "log_tran&test.txt"):
-                    os.remove(Path(args.output_dir) / "log_tran&test.txt")
+                if os.path.exists(Path(args.output_dir) / "log_train&test.txt"):
+                    os.remove(Path(args.output_dir) / "log_train&test.txt")
         else:
             print('remove logs !')
             if os.path.exists(os.path.join(this_dir, 'log_dist.txt')):
                 os.remove(os.path.join(this_dir, 'log_dist.txt'))
-            if os.path.exists(Path(args.output_dir) / "log_tran&test.txt"):
-                os.remove(Path(args.output_dir) / "log_tran&test.txt")
+            if os.path.exists(Path(args.output_dir) / "log_train&test.txt"):
+                os.remove(Path(args.output_dir) / "log_train&test.txt")
     logger = utl.setup_logger(os.path.join(this_dir, 'log_dist.txt'), command=command)
     # logger.output_print("git:\n  {}\n".format(utils.get_sha()))
 
@@ -104,11 +104,13 @@ def main(args):
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,
                                  weight_decay=args.weight_decay,
                                  )
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_drop)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=args.lr_drop_size)
 
     dataset_train = METEORDataLayer(phase='train', args=args)
     dataset_val = METEORDataLayer(phase='test', args=args)
 
+    args.weight_values = dataset_train.weights
+    
     if args.distributed:
         sampler_train = DistributedSampler(dataset_train)
         sampler_val = DistributedSampler(dataset_val, shuffle=False)
@@ -184,7 +186,7 @@ def main(args):
                      'n_parameters': n_parameters}
 
         if args.output_dir and utils.is_main_process():
-            with (output_dir / "log_tran&test.txt").open("a") as f:
+            with (output_dir / "log_train&test.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
 
     total_time = time.time() - start_time
@@ -209,24 +211,16 @@ if __name__ == '__main__':
     
     
     # weighted loss with most deep architecture
-    args.output_dir = 'experiments/att_back/weig_loss_enc_4_dec_6'
+    args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_overfit_try'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    args.num_layers = 4
-    args.decoder_layers = 6
-    args.epochs = 10
+    args.num_layers = 2
+    args.decoder_layers = 4
+    args.epochs = 20
     args.weighted_loss = True
     
-    main(args)
-    
-    # TODO: set up experiment without optical flow features
-    args.output_dir = 'experiments/att_back/weig_loss_enc_4_dec_6_no_flow'
-    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    args.num_layers = 4
-    args.decoder_layers = 6
-    args.epochs = 10
-    args.weighted_loss = True
-    args.use_flow=False
-    args.dim_feature=1024
+    args.dropout_rate = 0.15
+    args.attn_dropout_rate = 0.15
+    args.batch_size = 256
+    args.weight_decay = 2e-4
     
     main(args)
-    

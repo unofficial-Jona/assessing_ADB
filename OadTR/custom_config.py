@@ -20,7 +20,8 @@ def get_args_parser():
     parser.add_argument('--weight_decay', default=1e-4, type=float)
     parser.add_argument('--epochs', default=5, type=int)
     parser.add_argument('--resize_feature', default=False, type=str2bool, help='run resize prepare_data or not')
-    parser.add_argument('--lr_drop', default=5, type=int)
+    parser.add_argument('--lr_drop', default=2, type=int)
+    parser.add_argument('--lr_drop_size', default=0.5, type=float)
     parser.add_argument('--clip_max_norm', default=1., type=float,
                         help='gradient clipping max norm')  # dataparallel
     parser.add_argument('--dataparallel', action='store_true', help='multi-gpus for training')
@@ -81,6 +82,7 @@ def get_args_parser():
     parser.add_argument('--similar_loss_coef', default=0.1, type=float)   # 0.3
     parser.add_argument('--margin', default=1., type=float)
     parser.add_argument('--weighted_loss', default='True', type=str2bool)
+    parser.add_argument('--weight_values', default=0) 
 
     # dataset parameters
     parser.add_argument('--dataset_file', type=str, default='../../../pvc-meteor/features/METEOR_info.json')

@@ -3,8 +3,28 @@ import pickle
 import torch
 import torch.utils.data as data
 import numpy as np
+import json
 
 import warnings
+
+from pdb import set_trace
+
+def get_weights(target, session_names, use_idx):
+    total_frames = 0
+    frames_per_cat = np.zeros(len(use_idx))
+    # makes sure that only videos in training data are used to calculate weights
+    for name in session_names:
+        total_frames += target[name]['feature_length']
+        _anno = target[name]['anno'][:, use_idx].sum(axis=0)
+        frames_per_cat += _anno
+
+    frames_not_cat = np.array([total_frames for i in use_idx]) - frames_per_cat
+    weights = frames_not_cat / frames_per_cat
+    weights /= weights.min()
+    return torch.tensor(weights)
+
+
+
 
 class METEORDataLayer(data.Dataset):
     def __init__(self, args, phase='train') -> None:
@@ -12,8 +32,6 @@ class METEORDataLayer(data.Dataset):
         self.pickle_root = '../../../pvc-meteor/features'
         self.sessions = getattr(args,phase + '_session_set') # used to get video names from json file
         self.enc_steps = args.enc_layers
-        self.encoder_steps = args.enc_layers
-        self.numclass = args.numclass
         self.dec_steps = args.query_num
         self.training = phase == 'train'
         self.inputs = list()
@@ -21,6 +39,9 @@ class METEORDataLayer(data.Dataset):
         # load annotation file based on phase
         self.subnet = 'train' if self.training else 'test'
         target_all = pickle.load(open(osp.join(self.pickle_root, f'target_METEOR_{self.subnet}.pickle'), 'rb'))
+        
+        
+        
 
         assert not (args.use_frequent and args.use_infrequent), "can't select frequent and infrequent categories at the same time"
         
@@ -36,6 +57,10 @@ class METEORDataLayer(data.Dataset):
             warnings.warn("args.all_class_names (defined in main) may needs to be updated.")
             self.use_idx = [0,1,2,3,4,5,6]
             
+        # set up weights for loss function
+        self.weights = get_weights(target_all, self.sessions, self.use_idx)
+        
+        
         # load and prepare annotations
         for session in self.sessions:
             target = target_all[session]['anno'][:, self.use_idx]
@@ -53,9 +78,9 @@ class METEORDataLayer(data.Dataset):
                     ])
 
         # load features
-        self.feature_all = pickle.load(open(osp.join(self.pickle_root, f'feature_METEOR_{self.subnet}.pickle'), 'rb'))
-        
-                    
+        self.feature_all = pickle.load(open(osp.join(self.pickle_root, f'features_METEOR_{self.subnet}.pickle'), 'rb'))
+                
+
             
     def get_dec_target(self, target_vector):
         target_matrix = np.zeros((self.enc_steps, self.dec_steps, target_vector.shape[-1]))
@@ -97,3 +122,21 @@ class METEORDataLayer(data.Dataset):
 
     def __len__(self):
         return len(self.inputs)
+    
+    
+class ARGS():
+    def __init__(self):
+        self.phase='train'
+        self.num_layers= 2
+        self.enc_layers = 2
+        self.numclass = 4
+        self.query_num = 8
+        self.train_session_set = json.load(open('../../../pvc-meteor/features/METEOR_info.json', 'r'))['METEOR']['train_session_set']
+        self.use_frequent = True
+        self.use_infrequent = False
+    
+if __name__ == '__main__':
+
+    args = ARGS()
+    
+    data_layer = METEORDataLayer(args)

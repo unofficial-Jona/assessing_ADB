@@ -37,7 +37,7 @@ class SetCriterion(nn.Module):
         self.size_average = True
         self.logsoftmax = nn.LogSoftmax(dim=1)
         if args.weighted_loss:
-            self.loss_fn = nn.BCEWithLogitsLoss(pos_weight = torch.tensor([2.49835684, 9.88368241, 25.99786372, 102.95971314])).to(args.device)
+            self.loss_fn = nn.BCEWithLogitsLoss(pos_weight = args.weight_values).to(args.device)
         else:
             self.loss_fn = nn.BCEWithLogitsLoss().to(args.device)
 
