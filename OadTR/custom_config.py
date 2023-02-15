@@ -68,7 +68,7 @@ def get_args_parser():
     parser.add_argument('--positional_encoding_type', default='learned', type=str,
                         help="fixed or learned")  # learned  fixed
 
-    parser.add_argument('--hidden_dim', default=4096, type=int,  # 512 1024
+    parser.add_argument('--hidden_dim', default=4096, type=int,  # 512 1024 
                         help="Size of the embeddings")
     parser.add_argument('--dropout_rate', default=0.1, type=float,
                         help="Dropout applied ")

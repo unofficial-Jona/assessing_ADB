@@ -103,4 +103,3 @@ def get_args_parser():
     parser.add_argument('--dist_url', default='tcp://127.0.0.1:12342', help='url used to set up distributed training')
     # 'env://'
     return parser
-

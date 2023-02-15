@@ -216,19 +216,32 @@ if __name__ == '__main__':
     args.test_session_set = data_info['test_session_set']
     args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
+
     
+    # reduced model dimensionality
+    args.hidden_dim = 1024
+    args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim'
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    args.num_layers = 2
+    args.decoder_layers = 4
+    args.eopchs = 20
+    args.weighted_loss = True
+    args.batch_size = 256
+    
+    main(args)
     
     # reduce overfitting(hopefully)
-    args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_overfit_try'
+    args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim_overfit'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     args.num_layers = 2
     args.decoder_layers = 4
     args.epochs = 20
     args.weighted_loss = True
     
-    args.dropout_rate = 0.15
-    args.attn_dropout_rate = 0.15
-    args.batch_size = 256
-    args.weight_decay = 2e-4
+    args.dropout_rate = 0.2
+    args.attn_dropout_rate = 0.2
+    args.batch_size = 512
+    args.weight_decay = 4e-4
     
     main(args)
+    
