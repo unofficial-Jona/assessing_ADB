@@ -20,8 +20,8 @@ def get_args_parser():
     parser.add_argument('--weight_decay', default=1e-4, type=float)
     parser.add_argument('--epochs', default=5, type=int)
     parser.add_argument('--resize_feature', default=False, type=str2bool, help='run resize prepare_data or not')
-    parser.add_argument('--lr_drop', default=2, type=int)
-    parser.add_argument('--lr_drop_size', default=0.5, type=float)
+    parser.add_argument('--lr_drop', default=1, type=int)
+    parser.add_argument('--lr_drop_size', default=0.5, type=float, help='')
     parser.add_argument('--clip_max_norm', default=1., type=float,
                         help='gradient clipping max norm')  # dataparallel
     parser.add_argument('--dataparallel', action='store_true', help='multi-gpus for training')
@@ -68,7 +68,7 @@ def get_args_parser():
     parser.add_argument('--positional_encoding_type', default='learned', type=str,
                         help="fixed or learned")  # learned  fixed
 
-    parser.add_argument('--hidden_dim', default=4096, type=int,  # 512 1024 
+    parser.add_argument('--hidden_dim', default=512, type=int,  # 512 1024 
                         help="Size of the embeddings")
     parser.add_argument('--dropout_rate', default=0.1, type=float,
                         help="Dropout applied ")
@@ -104,6 +104,7 @@ def get_args_parser():
 
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--num_workers', default=8, type=int)
+
     parser.add_argument('--use_frequent', default='True', type=str2bool, help='if True will select ["OverTaking", "LaneChange", "WrongLane", "Cutting"]')
     parser.add_argument('--use_infrequent', default='False', type=str2bool, help='if True will select ["OverSpeeding", "TrafficLight", "WrongTurn"]')
     

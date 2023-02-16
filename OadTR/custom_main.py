@@ -217,19 +217,49 @@ if __name__ == '__main__':
     args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
 
-    
-    # reduced model dimensionality
-    args.hidden_dim = 1024
-    args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim'
+    # experiment name
+    args.output_dir = 'experiments/att_back/overfit_reduction'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    args.num_layers = 2
-    args.decoder_layers = 4
-    args.eopchs = 20
+
+    # training duration
+    args.epochs = 10
+
+    # batch_size
+    args.batch_size = 1024  
+
+    # dropouts
+    args.dropout_rate = 0.5
+    args.attn_dropout_rate = 0.5
+    args.decoder_attn_dropout_rate = 0.5
+
+    # optimizer/loss
     args.weighted_loss = True
-    args.batch_size = 256
+    args.weight_decay = 1e-2
+    args.lr = 1e-3
+    args.lr_drop = 5
+
+    # model structure
+    args.num_layers = 2
+    args.decoder_layers = 3
+    args.hidden_dim = 512
+    args.decoder_embedding_dim_out = 512
+    args.query_num = 4
+    args.num_heads = 16
+    args.decoder_num_heads = 8
+
+    # resume --> uncomment if resume training from checkpoint
+    '''
+    args.weight_decay = 1e-3
+    args.resume = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim_2/'
+    args.dropout_rate = 0.4
+    args.attn_dropout_rate = 0.4
+    args.decoder_attn_dropout_rate = 0.4
+    
+    '''
     
     main(args)
     
+    '''
     # reduce overfitting(hopefully)
     args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim_overfit'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
@@ -238,10 +268,6 @@ if __name__ == '__main__':
     args.epochs = 20
     args.weighted_loss = True
     
-    args.dropout_rate = 0.2
-    args.attn_dropout_rate = 0.2
-    args.batch_size = 512
-    args.weight_decay = 4e-4
-    
+
     main(args)
-    
+    '''

@@ -78,7 +78,7 @@ class METEORDataLayer(data.Dataset):
                     ])
 
         # load features
-        self.feature_all = pickle.load(open(osp.join(self.pickle_root, f'features_METEOR_{self.subnet}.pickle'), 'rb'))
+        self.feature_all = pickle.load(open(osp.join(self.pickle_root, f'feature_METEOR_{self.subnet}.pickle'), 'rb'))
                 
 
             
