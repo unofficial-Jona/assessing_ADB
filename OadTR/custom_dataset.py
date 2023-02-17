@@ -77,7 +77,7 @@ class METEORDataLayer(data.Dataset):
                         session, start, end, enc_target, distance_target, class_h_target, dec_target
                     ])
 
-        # load features
+        # load features based on phase
         self.feature_all = pickle.load(open(osp.join(self.pickle_root, f'feature_METEOR_{self.subnet}.pickle'), 'rb'))
                 
 

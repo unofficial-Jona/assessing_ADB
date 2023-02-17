@@ -220,11 +220,11 @@ if __name__ == '__main__':
     args.numclass = len(args.all_class_name)
 
     # experiment name
-    args.output_dir = 'experiments/att_back/overfit_reduction'
+    args.output_dir = 'experiments/30_FPS/init_try'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     # training duration
-    args.epochs = 11
+    args.epochs = 20
 
     # batch_size
     args.batch_size = 1024  
@@ -238,26 +238,28 @@ if __name__ == '__main__':
     args.weighted_loss = True
     args.weight_decay = 5e-3
     args.lr = 1e-3
-    args.lr_drop = 5
+    args.lr_drop = 20
 
     # model structure
+    args.hidden_dim = 256
+    args.embedding_dim = 512
     args.num_layers = 2
     args.decoder_layers = 3
-    args.hidden_dim = 256
     args.decoder_embedding_dim_out = 256
-    args.decoder_embedding_dim_in = 256
+    args.decoder_embedding_dim = 512
     args.query_num = 4
-    args.num_heads = 16
-    args.decoder_num_heads = 8
+    args.num_heads = 8
+
 
     # resume --> uncomment if resume training from checkpoint
     '''
     arg_dict = generate_dict('experiments/att_back/weig_loss_enc_2_dec_4_red_dim_2/')
     args = ModelConfig(arg_dict)
-    
-    args.resume = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim_2/'
-    
     '''
+    args.resume = 'experiments/att_back/overfit_reduction2/checkpoint.pth'
+    args.epochs = 100
+    args.lr = 1e-3
+    args.lr_drop = 20
     
     main(args)
     
