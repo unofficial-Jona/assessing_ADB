@@ -24,6 +24,8 @@ import torch.nn as nn
 
 from torchinfo import summary
 
+from load_model_config import generate_dict, ModelConfig
+
 def main(args):
     utils.init_distributed_mode(args)
     command = 'python ' + ' '.join(sys.argv)
@@ -222,38 +224,38 @@ if __name__ == '__main__':
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     # training duration
-    args.epochs = 10
+    args.epochs = 11
 
     # batch_size
     args.batch_size = 1024  
 
     # dropouts
-    args.dropout_rate = 0.5
-    args.attn_dropout_rate = 0.5
-    args.decoder_attn_dropout_rate = 0.5
+    args.dropout_rate = 0.4
+    args.attn_dropout_rate = 0.4
+    args.decoder_attn_dropout_rate = 0.4
 
     # optimizer/loss
     args.weighted_loss = True
-    args.weight_decay = 1e-2
+    args.weight_decay = 5e-3
     args.lr = 1e-3
     args.lr_drop = 5
 
     # model structure
     args.num_layers = 2
     args.decoder_layers = 3
-    args.hidden_dim = 512
-    args.decoder_embedding_dim_out = 512
+    args.hidden_dim = 256
+    args.decoder_embedding_dim_out = 256
+    args.decoder_embedding_dim_in = 256
     args.query_num = 4
     args.num_heads = 16
     args.decoder_num_heads = 8
 
     # resume --> uncomment if resume training from checkpoint
     '''
-    args.weight_decay = 1e-3
+    arg_dict = generate_dict('experiments/att_back/weig_loss_enc_2_dec_4_red_dim_2/')
+    args = ModelConfig(arg_dict)
+    
     args.resume = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim_2/'
-    args.dropout_rate = 0.4
-    args.attn_dropout_rate = 0.4
-    args.decoder_attn_dropout_rate = 0.4
     
     '''
     
