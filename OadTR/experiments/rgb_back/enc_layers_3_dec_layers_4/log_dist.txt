@@ -1,0 +1,220 @@
+python custom_main.py
+lr:0.0001
+batch_size:1024
+weight_decay:0.005
+epochs:11
+resize_feature:False
+lr_drop:20
+lr_drop_size:0.5
+clip_max_norm:1.0
+dataparallel:False
+removelog:False
+use_flow:True
+version:v3
+query_num:8
+decoder_layers:4
+decoder_embedding_dim:1024
+decoder_embedding_dim_out:1024
+decoder_attn_dropout_rate:0.3
+decoder_num_heads:4
+classification_pred_loss_coef:0.5
+enc_layers:64
+lr_backbone:0.0001
+feature:{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}
+dim_feature:4096
+patch_dim:1
+embedding_dim:1024
+num_heads:8
+num_layers:3
+attn_dropout_rate:0.3
+positional_encoding_type:learned
+hidden_dim:1024
+dropout_rate:0.3
+numclass:4
+classification_x_loss_coef:0.3
+classification_h_loss_coef:1
+similar_loss_coef:0.1
+margin:1.0
+weighted_loss:False
+weight_values:tensor([ 1.0000,  3.8746,  9.9992, 41.4745], dtype=torch.float64)
+dataset_file:../../../pvc-meteor/features/METEOR_info.json
+frozen_weights:None
+thumos_data_path:/home/dancer/mycode/Temporal.Online.Detection/Online.TRN.Pytorch/preprocess/
+thumos_anno_path:data/thumos_{}_anno.pickle
+remove_difficult:False
+device:cuda
+binary_label:False
+output_dir:experiments/rgb_back/enc_layers_3_dec_layers_4
+seed:20
+resume:
+start_epoch:1
+eval:False
+num_workers:8
+use_frequent:True
+use_infrequent:False
+pickle_file_name:extraction_output_22-02-2023-16-18.pkl
+world_size:1
+dist_url:tcp://127.0.0.1:12342
+all_class_name:['OverTaking', 'LaneChange', 'WrongLane', 'Cutting']
+distributed:False
+number of params: 65200136
+[Epoch-1] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1838 cAP: 0.5009
+
+dec_mAP all together: | 0.18323952836951105 |.
+dec_mAP_pred | 0 : 0.18372735589239744 |.
+dec_mAP_pred | 1 : 0.18358838626895257 |.
+dec_mAP_pred | 2 : 0.18344428031210785 |.
+dec_mAP_pred | 3 : 0.1833119238549463 |.
+dec_mAP_pred | 4 : 0.18321621091416515 |.
+dec_mAP_pred | 5 : 0.1830700258472369 |.
+dec_mAP_pred | 6 : 0.18297721246476645 |.
+dec_mAP_pred | 7 : 0.1828854595909914 |.
+all decoder map: | 0.1833 |.
+OverTaking: ap = 0.6412, cap = 0.8012
+LaneChange: ap = 0.0620, cap = 0.4029
+WrongLane: ap = 0.0257, cap = 0.4238
+Cutting: ap = 0.0063, cap = 0.3759
+[Epoch-2] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1837 cAP: 0.5003
+
+dec_mAP all together: | 0.18305531728737784 |.
+dec_mAP_pred | 0 : 0.1835697225799524 |.
+dec_mAP_pred | 1 : 0.18341767426070735 |.
+dec_mAP_pred | 2 : 0.18326012233565125 |.
+dec_mAP_pred | 3 : 0.1831193013942121 |.
+dec_mAP_pred | 4 : 0.18299045987525164 |.
+dec_mAP_pred | 5 : 0.18285710290801516 |.
+dec_mAP_pred | 6 : 0.1827230700372244 |.
+dec_mAP_pred | 7 : 0.18257950851480828 |.
+all decoder map: | 0.1831 |.
+OverTaking: ap = 0.6415, cap = 0.8014
+LaneChange: ap = 0.0617, cap = 0.4014
+WrongLane: ap = 0.0253, cap = 0.4196
+Cutting: ap = 0.0063, cap = 0.3788
+[Epoch-3] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1859 cAP: 0.5015
+
+dec_mAP all together: | 0.18512425415398254 |.
+dec_mAP_pred | 0 : 0.185662857092543 |.
+dec_mAP_pred | 1 : 0.1855037030290934 |.
+dec_mAP_pred | 2 : 0.18534092030183563 |.
+dec_mAP_pred | 3 : 0.1851938041059889 |.
+dec_mAP_pred | 4 : 0.18505577764184977 |.
+dec_mAP_pred | 5 : 0.18491362026422803 |.
+dec_mAP_pred | 6 : 0.184772476540848 |.
+dec_mAP_pred | 7 : 0.18462169202282958 |.
+all decoder map: | 0.1851 |.
+OverTaking: ap = 0.6497, cap = 0.8064
+LaneChange: ap = 0.0622, cap = 0.4042
+WrongLane: ap = 0.0254, cap = 0.4206
+Cutting: ap = 0.0062, cap = 0.3748
+[Epoch-4] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1859 cAP: 0.5009
+
+dec_mAP all together: | 0.18517349792967525 |.
+dec_mAP_pred | 0 : 0.18569626397074127 |.
+dec_mAP_pred | 1 : 0.18554214650942263 |.
+dec_mAP_pred | 2 : 0.1853846249409099 |.
+dec_mAP_pred | 3 : 0.18524090949797056 |.
+dec_mAP_pred | 4 : 0.18510555737054263 |.
+dec_mAP_pred | 5 : 0.184965995459449 |.
+dec_mAP_pred | 6 : 0.18482549790496935 |.
+dec_mAP_pred | 7 : 0.18467630809504515 |.
+all decoder map: | 0.1852 |.
+OverTaking: ap = 0.6502, cap = 0.8064
+LaneChange: ap = 0.0617, cap = 0.4013
+WrongLane: ap = 0.0254, cap = 0.4200
+Cutting: ap = 0.0063, cap = 0.3758
+[Epoch-5] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1856 cAP: 0.5004
+
+dec_mAP all together: | 0.18492114547782754 |.
+dec_mAP_pred | 0 : 0.18542118870059462 |.
+dec_mAP_pred | 1 : 0.1852710269242762 |.
+dec_mAP_pred | 2 : 0.1851224888046966 |.
+dec_mAP_pred | 3 : 0.1849848176039539 |.
+dec_mAP_pred | 4 : 0.1848556418511871 |.
+dec_mAP_pred | 5 : 0.18472405749750623 |.
+dec_mAP_pred | 6 : 0.1845925181566445 |.
+dec_mAP_pred | 7 : 0.1844480436419949 |.
+all decoder map: | 0.1849 |.
+OverTaking: ap = 0.6492, cap = 0.8058
+LaneChange: ap = 0.0616, cap = 0.4008
+WrongLane: ap = 0.0252, cap = 0.4176
+Cutting: ap = 0.0063, cap = 0.3775
+[Epoch-6] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1855 cAP: 0.5018
+
+dec_mAP all together: | 0.1848092337180802 |.
+dec_mAP_pred | 0 : 0.18536099278742793 |.
+dec_mAP_pred | 1 : 0.18519678550348667 |.
+dec_mAP_pred | 2 : 0.18504561079804946 |.
+dec_mAP_pred | 3 : 0.18488709548362 |.
+dec_mAP_pred | 4 : 0.18475447391340272 |.
+dec_mAP_pred | 5 : 0.18460865567046925 |.
+dec_mAP_pred | 6 : 0.18446229798478808 |.
+dec_mAP_pred | 7 : 0.18430626413424492 |.
+all decoder map: | 0.1848 |.
+OverTaking: ap = 0.6483, cap = 0.8055
+LaneChange: ap = 0.0616, cap = 0.4011
+WrongLane: ap = 0.0258, cap = 0.4239
+Cutting: ap = 0.0063, cap = 0.3767
+[Epoch-7] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1850 cAP: 0.5009
+
+dec_mAP all together: | 0.18434393251853756 |.
+dec_mAP_pred | 0 : 0.18490077764312118 |.
+dec_mAP_pred | 1 : 0.18473335587117368 |.
+dec_mAP_pred | 2 : 0.1845766426560969 |.
+dec_mAP_pred | 3 : 0.18443320430867235 |.
+dec_mAP_pred | 4 : 0.18429010023210896 |.
+dec_mAP_pred | 5 : 0.18413870595323958 |.
+dec_mAP_pred | 6 : 0.1839910373361607 |.
+dec_mAP_pred | 7 : 0.18383193643672424 |.
+all decoder map: | 0.1844 |.
+OverTaking: ap = 0.6470, cap = 0.8052
+LaneChange: ap = 0.0613, cap = 0.3989
+WrongLane: ap = 0.0255, cap = 0.4209
+Cutting: ap = 0.0063, cap = 0.3784
+[Epoch-8] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1838 cAP: 0.4992
+
+dec_mAP all together: | 0.18307644864712702 |.
+dec_mAP_pred | 0 : 0.18361270101915306 |.
+dec_mAP_pred | 1 : 0.18345313869806676 |.
+dec_mAP_pred | 2 : 0.18329313898062116 |.
+dec_mAP_pred | 3 : 0.18314627852139254 |.
+dec_mAP_pred | 4 : 0.18301048511516732 |.
+dec_mAP_pred | 5 : 0.18286699773497694 |.
+dec_mAP_pred | 6 : 0.1827218815278017 |.
+dec_mAP_pred | 7 : 0.18256847079239763 |.
+all decoder map: | 0.1831 |.
+OverTaking: ap = 0.6420, cap = 0.8020
+LaneChange: ap = 0.0614, cap = 0.3999
+WrongLane: ap = 0.0254, cap = 0.4194
+Cutting: ap = 0.0063, cap = 0.3756
+[Epoch-9] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1857 cAP: 0.5024
+
+dec_mAP all together: | 0.18493908975512793 |.
+dec_mAP_pred | 0 : 0.18549496525806297 |.
+dec_mAP_pred | 1 : 0.18533365152261874 |.
+dec_mAP_pred | 2 : 0.18516981368780017 |.
+dec_mAP_pred | 3 : 0.18501642390058548 |.
+dec_mAP_pred | 4 : 0.18486956602901428 |.
+dec_mAP_pred | 5 : 0.184719282427873 |.
+dec_mAP_pred | 6 : 0.184569621322807 |.
+dec_mAP_pred | 7 : 0.18441029076463103 |.
+all decoder map: | 0.1849 |.
+OverTaking: ap = 0.6491, cap = 0.8064
+LaneChange: ap = 0.0616, cap = 0.4008
+WrongLane: ap = 0.0256, cap = 0.4221
+Cutting: ap = 0.0064, cap = 0.3804
+[Epoch-10] [IDU-{'fps': 15, 'rgb_extractor': 'ResNet', 'flow_extractor': 'RAFT', 'extraction_time': '22-02-2023-16-18'}] mAP: 0.1853 cAP: 0.4995
+
+dec_mAP all together: | 0.18460846396969666 |.
+dec_mAP_pred | 0 : 0.18512598683836706 |.
+dec_mAP_pred | 1 : 0.18497005533288946 |.
+dec_mAP_pred | 2 : 0.18481987554222257 |.
+dec_mAP_pred | 3 : 0.18467811683401286 |.
+dec_mAP_pred | 4 : 0.1845679396905786 |.
+dec_mAP_pred | 5 : 0.18441927603637187 |.
+dec_mAP_pred | 6 : 0.18427830970664152 |.
+dec_mAP_pred | 7 : 0.18413160373603354 |.
+all decoder map: | 0.1846 |.
+OverTaking: ap = 0.6483, cap = 0.8057
+LaneChange: ap = 0.0612, cap = 0.3984
+WrongLane: ap = 0.0254, cap = 0.4194
+Cutting: ap = 0.0062, cap = 0.3745

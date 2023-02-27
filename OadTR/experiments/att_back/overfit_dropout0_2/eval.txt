@@ -1,0 +1,33 @@
+precision :
+	OverTaking: 0.5676392572944297
+	LaneChange: 0.0
+	WrongLane: 0.14016172506738545
+	Cutting: 0.45287958115183247
+
+recall:
+	OverTaking: 0.003979026440072887
+	LaneChange: 0.0
+	WrongLane: 0.008614976805831677
+	Cutting: 0.09785067873303167
+
+f1 score:
+	OverTaking: 0.0079026569914511
+	LaneChange: 0.0
+	WrongLane: 0.016232245980958328
+	Cutting: 0.16093023255813954
+
+roc auc score: 0.5130060280565095
+coverage error: 1.47171698948715
+label ranking avg precision: 0.7377222522901759
+OverTaking:
+[[128974    163]
+ [ 53568    214]]
+LaneChange:
+[[166835    364]
+ [ 15720      0]]
+WrongLane:
+[[176564    319]
+ [  5984     52]]
+Cutting:
+[[180942    209]
+ [  1595    173]]
