@@ -63,7 +63,7 @@ class VisionTransformer_v3(nn.Module):
             self.position_encoding = FixedPositionalEncoding(
                 self.embedding_dim,
             )
-        print('position encoding :', positional_encoding_type)
+        # print('position encoding :', positional_encoding_type)
 
         self.pe_dropout = nn.Dropout(p=self.dropout_rate)
 
@@ -146,7 +146,7 @@ class VisionTransformer_v3(nn.Module):
             self.decoder_position_encoding = FixedPositionalEncoding(
                 self.embedding_dim,
             )
-        print('position decoding :', positional_encoding_type)
+        # print('position decoding :', positional_encoding_type)
         self.classifier = nn.Linear(d_model, out_dim)
         self.after_dropout = nn.Dropout(p=self.dropout_rate)
         # self.merge_fc = nn.Linear(d_model, 1)
