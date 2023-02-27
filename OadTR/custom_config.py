@@ -107,6 +107,7 @@ def get_args_parser():
 
     parser.add_argument('--use_frequent', default='True', type=str2bool, help='if True will select ["OverTaking", "LaneChange", "WrongLane", "Cutting"]')
     parser.add_argument('--use_infrequent', default='False', type=str2bool, help='if True will select ["OverSpeeding", "TrafficLight", "WrongTurn"]')
+    parser.add_argument('--pickle_file_name', default='METEOR.pickle', type=str, help='name starts usually with "extracted_features_..."')
     
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int,

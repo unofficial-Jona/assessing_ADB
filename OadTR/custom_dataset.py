@@ -4,6 +4,8 @@ import torch
 import torch.utils.data as data
 import numpy as np
 import json
+from tqdm import tqdm
+
 
 import warnings
 
@@ -21,27 +23,41 @@ def get_weights(target, session_names, use_idx):
     frames_not_cat = np.array([total_frames for i in use_idx]) - frames_per_cat
     weights = frames_not_cat / frames_per_cat
     weights /= weights.min()
+    # print(f'using the following weights: {weights}')
     return torch.tensor(weights)
-
-
 
 
 class METEORDataLayer(data.Dataset):
     def __init__(self, args, phase='train') -> None:
+        
+        
         self.data_root = '../../../pvc-meteor/features'
         self.pickle_root = '../../../pvc-meteor/features'
-        self.sessions = getattr(args,phase + '_session_set') # used to get video names from json file
+        self.sessions = getattr(args,phase + '_session_set') # used to get video names from json file --> no need to split into train and test
         self.enc_steps = args.enc_layers
         self.dec_steps = args.query_num
-        self.training = phase == 'train'
         self.inputs = list()
         
-        # load annotation file based on phase
-        self.subnet = 'train' if self.training else 'test'
-        target_all = pickle.load(open(osp.join(self.pickle_root, f'target_METEOR_{self.subnet}.pickle'), 'rb'))
+        # print(f'{phase}: {len(self.sessions)} videos')
         
+        # load file and split into annotations and features
         
+        '''
+        with open(osp.join(self.pickle_root, f'METEOR.pickle'), 'rb') as f:
+            file_size = osp.getsize(osp.join(self.pickle_root, f'METEOR.pickle'))
+            with tqdm.wrapattr(f, "read", total=file_size, desc="File content") as file:
+                load_obj = pickle.load(file)
+
         
+        '''
+        load_obj = pickle.load(open(osp.join(self.pickle_root, args.pickle_file_name), 'rb'))
+        
+        target_all = load_obj['annotations']
+        self.feature_all = load_obj['features']
+        feature_dict = load_obj['meta']
+        feature_dict['fps'] = int(30 / feature_dict['fps'])
+        args.feature = feature_dict
+
 
         assert not (args.use_frequent and args.use_infrequent), "can't select frequent and infrequent categories at the same time"
         
@@ -64,7 +80,7 @@ class METEORDataLayer(data.Dataset):
         # load and prepare annotations
         for session in self.sessions:
             target = target_all[session]['anno'][:, self.use_idx]
-            seed = np.random.randint(self.enc_steps) if self.training else 0
+            seed = np.random.randint(self.enc_steps) if phase == 'train' else 0
             for start, end in zip(
                     range(seed, target.shape[0], 1),  # self.enc_steps
                     range(seed + self.enc_steps, target.shape[0]-self.dec_steps, 1)):
@@ -77,9 +93,7 @@ class METEORDataLayer(data.Dataset):
                         session, start, end, enc_target, distance_target, class_h_target, dec_target
                     ])
 
-        # load features based on phase
-        self.feature_all = pickle.load(open(osp.join(self.pickle_root, f'feature_METEOR_{self.subnet}.pickle'), 'rb'))
-                
+        
 
             
     def get_dec_target(self, target_vector):

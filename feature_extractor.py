@@ -40,7 +40,7 @@ class FeatureExtractor():
 
         self.resize = kwargs.get('resize', (448,448))
     
-        self.batch_size = kwargs.get('batch_size', 64)
+        self.batch_size = kwargs.get('batch_size', 128)
 
         self.error_file = dict()
         
@@ -57,20 +57,21 @@ class FeatureExtractor():
             for param in self.flow_model.parameters():
                 param.requires_grad = False
             self.flow_model.eval()
-            # does not need inference transform, as image size is unimportant for flow estimation
+            self.flow_model = self.flow_model.to(self.device)
+            self.flow_inference_transform = Raft_Large_Weights.DEFAULT.transforms()
             
 
         if 'rgb_model' in kwargs.keys():
             self.rgb_model = kwargs['rgb_model']
             warnings.warn('Using a different rgb model may require disabling backprop', category=UserWarning, stacklevel=2)
         else:
-            model = swin_v2_b(weights=Swin_V2_B_Weights.DEFAULT, progress=False)
+            model = resnet50(weights=ResNet50_Weights.DEFAULT)
             for param in model.parameters():
                 param.requires_grad = False
             model.eval()
             self.rgb_model = create_feature_extractor(model, return_nodes={'flatten': 'flatten'}).to(self.device)
             
-            self.rgb_inference_transform = Swin_V2_B_Weights.DEFAULT.transforms()
+            self.rgb_inference_transform = ResNet50_Weights.DEFAULT.transforms()
 
         if 'vid_dir' in kwargs.keys():
             self.vid_dir = kwargs['vid_dir']
@@ -100,24 +101,25 @@ class FeatureExtractor():
         # pdb.set_trace()
         
         frames, _, _ = read_video(video, pts_unit='sec', output_format='TCHW')
-
+        
         rgb_frames = torch.stack([frames[i] for i in range(frames.shape[0]) if i % self.frame_interval == 0])
         
         # use provided inference transform, so images can be passed to the models
         rgb_frames = self.rgb_inference_transform(rgb_frames).to(self.device)
-        
+            
         # extract rgb_features
         rgb_chunks = torch.split(rgb_frames, split_size_or_sections=self.batch_size, dim=0)
         rgb_features = []
         
-        # pdb.set_trace()
         
         for chunk in rgb_chunks:
+
             features = self.rgb_model(chunk)['flatten']
             rgb_features.append(features)
         
         rgb_features = torch.cat(rgb_features, dim=0).to('cpu')
         rgb_features = rgb_features[1:]
+        
         
         # extract flow_features      
         flow_stack1, flow_stack2 = rgb_frames[:-1], rgb_frames[1:]
@@ -125,9 +127,10 @@ class FeatureExtractor():
         flow_stack2 = torch.split(flow_stack2, split_size_or_sections=self.batch_size, dim=0)
 
         flow_features = []
-
+        
+        
         for stack1, stack2 in zip(flow_stack1, flow_stack2):
-            features, _ = self.flow_model(stack1, stack2)
+            features = self.flow_model(stack1, stack2)
             features = flow_to_image(features[-1])
             
             features = self.rgb_inference_transform(features)
@@ -135,7 +138,7 @@ class FeatureExtractor():
             flow_features.append(features)
 
         flow_features = torch.cat(flow_features, dim=0).to('cpu')
-
+                
         rgb_features, flow_features = rgb_features.detach().cpu().resolve_conj().resolve_neg().numpy(), flow_features.detach().cpu().resolve_conj().resolve_neg().numpy()
 
         return {'rgb':rgb_features, 'flow':flow_features}
@@ -309,14 +312,15 @@ class FeatureExtractor():
 
             except:
                 self.error_file[file_path[-29:-4]] = 'catched by try-except block'
-                # print(file_path[-29:-4])
+                print('try_except catched: ', file_path[-29:-4])
                 continue
 
         output_dict = {
             'meta': general_information,
             'features': feature_dict,
             'annotations': annotation_dict,
-            'error_file': self.error_file 
+            'error_file': self.error_file,
+            'class_indices': self.labels_mapping
         }
         
         if save:

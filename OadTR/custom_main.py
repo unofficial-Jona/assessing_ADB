@@ -24,7 +24,6 @@ import torch.nn as nn
 
 from torchinfo import summary
 
-from load_model_config import generate_dict, ModelConfig
 
 def main(args):
     utils.init_distributed_mode(args)
@@ -48,13 +47,7 @@ def main(args):
     logger = utl.setup_logger(os.path.join(this_dir, 'log_dist.txt'), command=command)
     # logger.output_print("git:\n  {}\n".format(utils.get_sha()))
 
-    # save args
-    for arg in vars(args):
-        if 'session_set' in arg:
-            continue
-        logger.output_print("{}:{}".format(arg, getattr(args, arg)))
-
-
+    
     # prepare data_loader
     dataset_train = METEORDataLayer(phase='train', args=args)
     dataset_val = METEORDataLayer(phase='test', args=args)
@@ -77,6 +70,12 @@ def main(args):
                                  drop_last=False, pin_memory=True, num_workers=args.num_workers)
 
     
+    # save args
+    for arg in vars(args):
+        if 'session_set' in arg:
+            continue
+        logger.output_print("{}:{}".format(arg, getattr(args, arg)))
+
     # set device
     if args.distributed:
         print('args.gpu : ', args.gpu)
@@ -208,7 +207,10 @@ def main(args):
     print('Training time {}'.format(total_time_str))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   
+    
+    time.sleep(25*11*60)
+    
     parser = argparse.ArgumentParser('OadTR training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
     # args.dataset = osp.basename(osp.normpath(args.data_root)).upper()
@@ -218,50 +220,47 @@ if __name__ == '__main__':
     args.test_session_set = data_info['test_session_set']
     args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
-
-    # experiment name
-    args.output_dir = 'experiments/30_FPS/init_try'
-    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-
-    # training duration
-    args.epochs = 20
-
-    # batch_size
-    args.batch_size = 1024  
-
-    # dropouts
-    args.dropout_rate = 0.4
-    args.attn_dropout_rate = 0.4
-    args.decoder_attn_dropout_rate = 0.4
-
-    # optimizer/loss
-    args.weighted_loss = True
-    args.weight_decay = 5e-3
-    args.lr = 1e-3
+    
     args.lr_drop = 20
+    args.epochs = 11 # parameter is used in range(1, args.epochs) --> 10 iterations
+    args.batch_size = 1024
 
-    # model structure
-    args.hidden_dim = 256
-    args.embedding_dim = 512
-    args.num_layers = 2
-    args.decoder_layers = 3
-    args.decoder_embedding_dim_out = 256
-    args.decoder_embedding_dim = 512
-    args.query_num = 4
-    args.num_heads = 8
+    
+    args.weighted_loss = False
+    args.lr = 1e-4
+    args.hidden_dim = 1024
+    args.weight_decay = 5e-3
+    
+    args.dropout_rate = 0.3
+    args.attn_dropout_rate = 0.3
+    args.decoder_attn_dropout_rate = 0.3
+    
+    
+
+    for encoder_layers in [2,3,4]:
+        for decoder_layers in [4,5,6]:
+            args.pickle_file_name = 'extraction_output_22-02-2023-16-18.pkl'
+            args.output_dir = f'experiments/rgb_back/enc_layers_{encoder_layers}_dec_layers_{decoder_layers}'
+            Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+
+            args.dim_feature = 4096
+            args.num_layers = encoder_layers
+            args.decoder_layers = decoder_layers
+
+            main(args)
 
 
     # resume --> uncomment if resume training from checkpoint
     '''
     arg_dict = generate_dict('experiments/att_back/weig_loss_enc_2_dec_4_red_dim_2/')
     args = ModelConfig(arg_dict)
-    '''
+    
     args.resume = 'experiments/att_back/overfit_reduction2/checkpoint.pth'
     args.epochs = 100
     args.lr = 1e-3
     args.lr_drop = 20
+    '''
     
-    main(args)
     
     '''
     # reduce overfitting(hopefully)
