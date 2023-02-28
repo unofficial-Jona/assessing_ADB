@@ -22,9 +22,10 @@ def get_weights(target, session_names, use_idx):
 
     frames_not_cat = np.array([total_frames for i in use_idx]) - frames_per_cat
     weights = frames_not_cat / frames_per_cat
-    weights /= weights.min()
+    # weights /= weights.min()
     # print(f'using the following weights: {weights}')
-    return torch.tensor(weights)
+    warnings.warn('weights are scaled by 3')
+    return 3 * torch.tensor(weights)
 
 
 class METEORDataLayer(data.Dataset):

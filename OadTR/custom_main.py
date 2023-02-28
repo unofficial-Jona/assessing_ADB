@@ -16,6 +16,7 @@ import os
 import utils
 
 from custom_dataset import METEORDataLayer
+from custom_utils import add_model_eval_to_comparison, generate_dict, ModelConfig
 import transformer_models
 from dataset import TRNTHUMOSDataLayer
 from train import train_one_epoch, evaluate
@@ -176,9 +177,9 @@ def main(args):
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
             
-            # update after every epoch instead of --> extra checkpoint before LR drop and every 100 epochs 
-            # if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 100 == 0:
-            checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+            # update every 5 epochs instead of --> extra checkpoint before LR drop and every 100 epochs 
+            if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 5 == 0:
+                checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
             
             for checkpoint_path in checkpoint_paths:
                 utils.save_on_master({
@@ -208,8 +209,7 @@ def main(args):
 
 
 if __name__ == '__main__':   
-    
-    time.sleep(25*11*60)
+    '''
     
     parser = argparse.ArgumentParser('OadTR training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
@@ -252,14 +252,22 @@ if __name__ == '__main__':
 
     # resume --> uncomment if resume training from checkpoint
     '''
-    arg_dict = generate_dict('experiments/att_back/weig_loss_enc_2_dec_4_red_dim_2/')
-    args = ModelConfig(arg_dict)
+    arg_dict = generate_dict('experiments/att_back/overfit_dropout0_1/')
+    args = ModelConfig(**arg_dict)
     
-    args.resume = 'experiments/att_back/overfit_reduction2/checkpoint.pth'
-    args.epochs = 100
-    args.lr = 1e-3
-    args.lr_drop = 20
-    '''
+    with open(args.dataset_file, 'r') as f:
+        data_info = json.load(f)['METEOR']
+    args.train_session_set = data_info['train_session_set']
+    args.test_session_set = data_info['test_session_set']
+    args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
+    args.numclass = len(args.all_class_name)
+
+    
+    args.output_dir = 'experiments/att_back/3_unsc_loss_dropout01'
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    args.epochs = 80
+    main(args)
+    add_model_eval_to_comparison(args.output_dir)
     
     
     '''
@@ -272,5 +280,4 @@ if __name__ == '__main__':
     args.weighted_loss = True
     
 
-    main(args)
     '''

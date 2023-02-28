@@ -21,16 +21,22 @@ import transformer_models
 # %%
 
 def generate_dict(location):
-
-    with open(location, 'r') as f:
-        doc = f.read()
+    try:
+        with open(location, 'r') as f:
+            doc = f.read()
+    except IsADirectoryError:
+        with open(location + 'log_dist.txt', 'r') as f:
+            doc = f.read()
 
     arg_str = doc.split('\nnumber of params')[0]
     arg_str = arg_str.split('\n')
     arg_str = [i.split(':') for i in arg_str[1:]]
 
     new_dic = {}
+
     for i in arg_str:
+        if len(i) != 2:
+            continue
         new_dic[i[0]] = i[1]
     new_dic
 
@@ -204,9 +210,9 @@ def eval_experiment(exp_dir, save_results=True, save_fig=True, checkpoint='DEFAU
         cyt = y_true[:,i]
         cyp = y_pred[:,i]
 
-        metrics['precision'].append(precision_score(cyt, cyp))
-        metrics['recall'].append(recall_score(cyt, cyp))
-        metrics['f1'].append(f1_score(cyt, cyp))
+        metrics['precision'].append(precision_score(cyt, cyp, zero_division=0))
+        metrics['recall'].append(recall_score(cyt, cyp, zero_division=0))
+        metrics['f1'].append(f1_score(cyt, cyp, zero_division=0))
 
     if save_results:
     # write all these measures + additional information (tested epoch,...) to .txt file
@@ -267,14 +273,31 @@ def compare_experiments(root_dir, labels = ['OverTaking', 'LaneChange', 'WrongLa
     if save:
         # TODO: one has to go
         # write one version thats machien readable
-        results.to_csv(os.path.join(root, 'results.csv'))
+        results.to_csv(os.path.join(root_dir, 'results.csv'))
 
         # write human readable version too
-        with open('results_readable.txt', 'w') as f:
+        with open(os.path.join(root_dir, 'results_readable.txt'), 'w') as f:
             f.write(results.to_string())
     
     return results
 
+def add_model_eval_to_comparison(exp_dir, comparison_csv_path='experiments/results.csv', labels = ['OverTaking', 'LaneChange', 'WrongLane', 'Cutting']):
+    model_results = eval_experiment(exp_dir)
+    old_df = pd.read_csv(comparison_csv_path, index_col=0)
+    new_df = pd.DataFrame(columns = old_df.columns)
+    set_trace()
+    metrics_per_cat = ['precision', 'recall', 'f1']
+    for met_name in metrics_per_cat:
+        for lab, val in zip(labels, model_results[met_name]):
+            model_results[met_name + '_' + lab] = val
+        del model_results[met_name]
+    del model_results['confusion matrices']
+    dir_name = exp_dir.removeprefix('experiments/')
+    new_df.loc[dir_name,:] = model_results
+    out_df = pd.concat([old_df, new_df])
+    out_df = out_df.sort_index()
+    out_df.to_csv(comparison_csv_path)
+
 
 if __name__ == '__main__':
-    compare_experiments('experiments')
+    add_model_eval_to_comparison('experiments/att_back/2_unsc_loss_dropout01')
