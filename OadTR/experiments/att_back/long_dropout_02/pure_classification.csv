@@ -1,0 +1,5 @@
+,total_examples,nothing,OverTaking,LaneChange,WrongLane,Cutting
+OverTaking,44689,30981,13415,13708,10677,9642
+LaneChange,8332,6642,1649,1690,1233,1092
+WrongLane,3589,2530,1026,1059,794,728
+Cutting,937,423,511,514,434,413
