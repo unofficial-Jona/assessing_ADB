@@ -209,8 +209,6 @@ def main(args):
 
 
 if __name__ == '__main__':   
-    '''
-    
     parser = argparse.ArgumentParser('OadTR training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
     # args.dataset = osp.basename(osp.normpath(args.data_root)).upper()
@@ -221,38 +219,41 @@ if __name__ == '__main__':
     args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
     
-    args.lr_drop = 20
-    args.epochs = 11 # parameter is used in range(1, args.epochs) --> 10 iterations
+    args.lr_drop = 40
+    args.lr_drop_size = 0.1
+    args.epochs = 40 # parameter is used in range(1, args.epochs)
     args.batch_size = 1024
 
     
-    args.weighted_loss = False
-    args.lr = 1e-4
-    args.hidden_dim = 1024
+    args.weighted_loss = True
+    args.lr = 1e-3
+    args.hidden_dim = 512
     args.weight_decay = 5e-3
     
-    args.dropout_rate = 0.3
-    args.attn_dropout_rate = 0.3
-    args.decoder_attn_dropout_rate = 0.3
+    args.dropout_rate = 0.2
+    args.attn_dropout_rate = 0.2
+    args.decoder_attn_dropout_rate = 0.2
+    
+    args.positional_encoding_type = 'fixed'
+    
+    args.dim_feature = 2048
+    args.num_heads = 16
+    args.dec_num_heads = 8
+    
+    args.pickle_file_name = 'extraction_output_11-02-2023-18-33.pkl'
+    
+    args.output_dir = f'experiments/att_back/new_loss_feat_drop'
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     
     
 
-    for encoder_layers in [2,3,4]:
-        for decoder_layers in [4,5,6]:
-            args.pickle_file_name = 'extraction_output_22-02-2023-16-18.pkl'
-            args.output_dir = f'experiments/rgb_back/enc_layers_{encoder_layers}_dec_layers_{decoder_layers}'
-            Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-
-            args.dim_feature = 4096
-            args.num_layers = encoder_layers
-            args.decoder_layers = decoder_layers
-
-            main(args)
+    main(args)
+    add_model_eval_to_comparison(args.output_dir)
 
 
     # resume --> uncomment if resume training from checkpoint
     '''
-    arg_dict = generate_dict('experiments/att_back/overfit_dropout0_1/')
+    arg_dict = generate_dict('experiments/att_back/overfit_dropout0_2/')
     args = ModelConfig(**arg_dict)
     
     with open(args.dataset_file, 'r') as f:
@@ -263,12 +264,13 @@ if __name__ == '__main__':
     args.numclass = len(args.all_class_name)
 
     
-    args.output_dir = 'experiments/att_back/3_unsc_loss_dropout01'
+    args.output_dir = 'experiments/att_back/new_data_load'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    args.epochs = 80
+    args.epochs = 20
+    args.lr_drop = 40
     main(args)
     add_model_eval_to_comparison(args.output_dir)
-    
+    '''
     
     '''
     # reduce overfitting(hopefully)

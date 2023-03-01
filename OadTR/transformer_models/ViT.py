@@ -53,6 +53,8 @@ class VisionTransformer_v3(nn.Module):
         self.flatten_dim = patch_dim * patch_dim * num_channels
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embedding_dim))
 
+        self.feature_dropout = nn.Dropout(p=self.dropout_rate)
+        
         self.linear_encoding = nn.Linear(self.flatten_dim, embedding_dim)
                 
         if positional_encoding_type == "learned":
@@ -159,7 +161,10 @@ class VisionTransformer_v3(nn.Module):
             x = sequence_input_rgb
         elif self.with_motion:
             x = sequence_input_flow
-
+        
+        # my modification
+        x = self.feature_dropout(x)
+        
         x = self.linear_encoding(x) # [128, 64, 1024]
         cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
         # x = torch.cat((cls_tokens, x), dim=1)
