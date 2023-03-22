@@ -26,7 +26,7 @@ import torch.nn as nn
 from torchinfo import summary
 
 
-def main(args):
+def main(args):    
     utils.init_distributed_mode(args)
     command = 'python ' + ' '.join(sys.argv)
     this_dir = args.output_dir
@@ -64,9 +64,11 @@ def main(args):
 
     batch_sampler_train = torch.utils.data.BatchSampler(
         sampler_train, args.batch_size, drop_last=True)
+    
 
+    
     data_loader_train = DataLoader(dataset_train, batch_sampler=batch_sampler_train,
-                                   pin_memory=True, num_workers=args.num_workers)
+                                   pin_memory=True, num_workers=1)
     data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
                                  drop_last=False, pin_memory=True, num_workers=args.num_workers)
 
@@ -219,34 +221,34 @@ if __name__ == '__main__':
     args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
     
-    args.lr_drop = 40
+    args.lr_drop = 20
     args.lr_drop_size = 0.1
-    args.epochs = 40 # parameter is used in range(1, args.epochs)
-    args.batch_size = 1024
-
+    args.epochs = 60 # parameter is used in range(1, args.epochs)
+    args.batch_size = 512
+    
+    args.decoder_layers = 4
     
     args.weighted_loss = True
     args.lr = 1e-3
-    args.hidden_dim = 512
+    args.hidden_dim = 1024
     args.weight_decay = 5e-3
     
     args.dropout_rate = 0.2
     args.attn_dropout_rate = 0.2
     args.decoder_attn_dropout_rate = 0.2
     
-    args.positional_encoding_type = 'fixed'
+    args.positional_encoding_type = 'learned'
     
     args.dim_feature = 2048
-    args.num_heads = 16
-    args.dec_num_heads = 8
+
     
     args.pickle_file_name = 'extraction_output_11-02-2023-18-33.pkl'
     
-    args.output_dir = f'experiments/att_back/new_loss_feat_drop'
+    args.output_dir = f'experiments/att_back/consider_fewer_actors'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     
     
-
+    torch.cuda.empty_cache()
     main(args)
     add_model_eval_to_comparison(args.output_dir)
 

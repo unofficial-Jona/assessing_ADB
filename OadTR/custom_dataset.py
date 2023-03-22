@@ -17,6 +17,8 @@ def get_weights(target, session_names, use_idx):
     frames_per_cat = np.zeros(len(use_idx))
     # makes sure that only videos in training data are used to calculate weights
     for name in session_names:
+        if name not in target.keys():
+            continue
         total_frames += target[name]['feature_length']
         _anno = target[name]['anno'][:, use_idx].sum(axis=0)
         frames_per_cat += _anno
@@ -44,22 +46,19 @@ class METEORDataLayer(data.Dataset):
         
         # load file and split into annotations and features
         
-        '''
-        with open(osp.join(self.pickle_root, f'METEOR.pickle'), 'rb') as f:
-            file_size = osp.getsize(osp.join(self.pickle_root, f'METEOR.pickle'))
-            with tqdm.wrapattr(f, "read", total=file_size, desc="File content") as file:
-                load_obj = pickle.load(file)
 
-        
-        '''
         load_obj = pickle.load(open(osp.join(self.pickle_root, args.pickle_file_name), 'rb'))
         
-        target_all = load_obj['annotations']
+        target_all = pickle.load(open(osp.join(self.pickle_root, 'new_anno.pkl'), 'rb'))
+        # target_all = load_obj['annotations']
+        
+        warnings.warn('hard coded use of "new" annotations (only consider actions if commited by specific actors) ')
+        
         self.feature_all = load_obj['features']
         feature_dict = load_obj['meta']
         feature_dict['fps'] = int(30 / feature_dict['fps'])
         args.feature = feature_dict
-
+        
 
         assert not (args.use_frequent and args.use_infrequent), "can't select frequent and infrequent categories at the same time"
         
@@ -79,8 +78,15 @@ class METEORDataLayer(data.Dataset):
         self.weights = get_weights(target_all, self.sessions, self.use_idx)
         
         
+        # set_trace()
+        
         # load and prepare annotations
         for session in self.sessions:
+            
+            # modification to accomodate annotation_file with fewer files/annotations 
+            if session not in target_all.keys():
+                continue
+            
             target = target_all[session]['anno'][:, self.use_idx]
             seed = np.random.randint(self.enc_steps) if phase == 'train' else 0
             for start, end in zip(
@@ -90,10 +96,8 @@ class METEORDataLayer(data.Dataset):
                 # dec_target = self.get_dec_target(target[start:end + self.dec_steps])
                 dec_target = target[end:end + self.dec_steps]
                 distance_target, class_h_target = self.get_distance_target(target[start:end])
-                if class_h_target.argmax() != 21:
-                    self.inputs.append([
-                        session, start, end, enc_target, distance_target, class_h_target, dec_target
-                    ])
+                # set_trace()
+                self.inputs.append([session, start, end, enc_target, distance_target, class_h_target, dec_target])
 
 
             
@@ -134,7 +138,19 @@ class METEORDataLayer(data.Dataset):
         distance_target = torch.tensor(distance_target)
         class_h_target = torch.tensor(class_h_target)
         dec_target = torch.tensor(dec_target)
-
+        
+        if camera_inputs.shape[0] == 0:
+            print(f'session: {session}')
+            print(f'session in anno_file: {session in self.feature_all.keys()}')
+            print(f'start, end: {start, end}')
+            print(f'camera_inputs: {camera_inputs.shape}')
+            print(f'motion_inputs: {motion_inputs.shape}')
+            print(f'enc_target: {enc_target.shape}')
+            print(f'distance_target: {distance_target.shape}')
+            print(f'class_h_target: {class_h_target.shape}')
+            print(f'dec_target: {dec_target.shape}')
+        
+        
         return camera_inputs, motion_inputs, enc_target, distance_target, class_h_target, dec_target
 
     def __len__(self):
@@ -272,7 +288,7 @@ class ARGS():
         self.enc_layers = 2
         self.numclass = 4
         self.query_num = 8
-        self.test_session_set = json.load(open('../../../pvc-meteor/features/METEOR_info.json', 'r'))['METEOR']['test_session_set']
+        self.train_session_set = json.load(open('../../../pvc-meteor/features/METEOR_info.json', 'r'))['METEOR']['train_session_set']
         self.use_frequent = True
         self.use_infrequent = False
     
@@ -280,7 +296,9 @@ if __name__ == '__main__':
 
     args = ARGS()
     args.pickle_file_name = 'extraction_output_22-02-2023-16-18.pkl'
-    data_layer = PURE_METEORDataLayer(args)
+    data_layer = METEORDataLayer(args)
     # sampler_val = torch.utils.data.SequentialSampler(data_layer)
-    # loader = DataLoader(dataset_val, 1)
+    loader = data.DataLoader(data_layer, 1)
     
+    
+    print('what a wonderful world')

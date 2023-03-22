@@ -16,6 +16,7 @@ import os
 import utils
 
 from custom_dataset import METEORDataLayer
+from custom_utils import add_model_eval_to_comparison
 import transformer_models
 from dataset import TRNTHUMOSDataLayer
 from train import train_one_epoch, evaluate
@@ -61,9 +62,9 @@ def main(args):
         sampler_train = torch.utils.data.RandomSampler(dataset_train)
         sampler_val = torch.utils.data.SequentialSampler(dataset_val)
 
-    batch_sampler_train = torch.utils.data.BatchSampler(
-        sampler_train, args.batch_size, drop_last=True)
+    batch_sampler_train = torch.utils.data.BatchSampler(sampler_train, args.batch_size, drop_last=True)
 
+    set_trace()
     data_loader_train = DataLoader(dataset_train, batch_sampler=batch_sampler_train,
                                    pin_memory=True, num_workers=args.num_workers)
     data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
@@ -177,8 +178,9 @@ def main(args):
             checkpoint_paths = [output_dir / 'checkpoint.pth']
             
             # update after every epoch instead of --> extra checkpoint before LR drop and every 100 epochs 
-            # if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 100 == 0:
-            checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+            if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 5 == 0:
+                checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+
             
             for checkpoint_path in checkpoint_paths:
                 utils.save_on_master({
@@ -201,7 +203,6 @@ def main(args):
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log_train&test.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
-
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
@@ -219,32 +220,28 @@ if __name__ == '__main__':
     args.numclass = len(args.all_class_name)
     
     args.lr_drop = 20
-    args.epochs = 11 # parameter is used in range(1, args.epochs) --> 10 iterations
+    args.epochs = 80 # parameter is used in range(1, args.epochs) --> 10 iterations
     args.batch_size = 1024
     
     args.pickle_file_name = 'extraction_output_11-02-2023-18-33.pkl' # links to attention backbone
     
-    args.weighted_loss = False
-    args.lr = 1e-4
+    args.weighted_loss = True
+    args.lr = 1e-3
     args.hidden_dim = 1024
     args.weight_decay = 5e-3
     
-    args.dropout_rate = 0.3
-    args.attn_dropout_rate = 0.3
-    args.decoder_attn_dropout_rate = 0.3
+    args.dropout_rate = 0.2
+    args.attn_dropout_rate = 0.2
+    args.decoder_attn_dropout_rate = 0.2
     args.dim_feature = 2048
     
-    args.resume = 'experiments/att_back/enc_layers_4_dec_layers_5/checkpoint0008.pth'
+    # args.resume = 'experiments/att_back/enc_layers_4_dec_layers_5/checkpoint0008.pth'
     
-    args.num_layers = 4
-    args.decoder_layers = 5
+    args.num_layers = 3
+    args.decoder_layers = 4
 
-    args.output_dir = f'experiments/att_back/enc_layers_4_dec_layers_5'
-    main(args)
-
-    
-            
-    args.resume = ''
-    args.output_dir = 'experiments/att_back/enc_layers_4_dec_layers_6'
+    args.output_dir = 'experiments/att_back/consider_fewer_actors'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    
     main(args)
+    add_model_eval_to_comparison(args.ouput_dir)

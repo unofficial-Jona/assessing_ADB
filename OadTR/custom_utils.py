@@ -421,5 +421,5 @@ def pure_sample_classification(exp_dir, save=True, **kwargs):
     
 if __name__ == '__main__':
     # add_model_eval_to_comparison('experiments/att_back/2_unsc_loss_dropout01')
-    pure_sample_classification('experiments/att_back/long_dropout_02')
+    add_model_eval_to_comparison('experiments/att_back/new_loss_feat_drop')
     

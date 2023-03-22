@@ -39,6 +39,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     header = 'Epoch: [{}]'.format(epoch)
     print_freq = 500
     num_class = 4
+    # set_trace()
     for camera_inputs, motion_inputs, enc_target, distance_target, class_h_target, dec_target in metric_logger.log_every(data_loader, print_freq, header):
         
         
@@ -49,9 +50,8 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         distance_target = distance_target.to(device)
         class_h_target = class_h_target.to(device)
         dec_target = dec_target.to(device)
-
-        enc_score_p0, dec_scores = \
-            model(camera_inputs, motion_inputs)
+        
+        enc_score_p0, dec_scores = model(camera_inputs, motion_inputs)
 
         outputs = {
             'labels_encoder': enc_score_p0,  # [128, 22]
