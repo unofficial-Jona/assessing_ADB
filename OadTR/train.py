@@ -38,7 +38,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     # metric_logger.add_meter('class_error', utils.SmoothedValue(window_size=1, fmt='{value:.2f}'))
     header = 'Epoch: [{}]'.format(epoch)
     print_freq = 500
-    num_class = 4
+    num_class = 5
     # set_trace()
     for camera_inputs, motion_inputs, enc_target, distance_target, class_h_target, dec_target in metric_logger.log_every(data_loader, print_freq, header):
         
@@ -49,6 +49,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         enc_target = enc_target.to(device)
         distance_target = distance_target.to(device)
         class_h_target = class_h_target.to(device)
+        # set_trace()
         dec_target = dec_target.to(device)
         
         enc_score_p0, dec_scores = model(camera_inputs, motion_inputs)
@@ -246,3 +247,10 @@ def evaluate(model, criterion, data_loader, device, logger, args, epoch, nprocs=
     stats = {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
     return stats
+
+'''
+def train_one_epoch_end2end(model: torch.nn.Module, rgb_extractor: torch.nn.Module, 
+                    flow_extractor: torch.nn.Module, criterion: torch.nn.Module,
+                    data_loader: Iterable, optimizer: torch.optim.Optimizer,
+                    device: torch.device, epoch: int, max_norm: float = 0): 
+'''

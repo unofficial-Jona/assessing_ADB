@@ -49,10 +49,10 @@ class METEORDataLayer(data.Dataset):
 
         load_obj = pickle.load(open(osp.join(self.pickle_root, args.pickle_file_name), 'rb'))
         
-        target_all = pickle.load(open(osp.join(self.pickle_root, 'new_anno.pkl'), 'rb'))
-        # target_all = load_obj['annotations']
+        # target_all = pickle.load(open(osp.join(self.pickle_root, 'new_anno.pkl'), 'rb'))
+        target_all = load_obj['annotations']
         
-        warnings.warn('hard coded use of "new" annotations (only consider actions if commited by specific actors) ')
+        warnings.warn('modified to incorporate background class')
         
         self.feature_all = load_obj['features']
         feature_dict = load_obj['meta']
@@ -88,6 +88,17 @@ class METEORDataLayer(data.Dataset):
                 continue
             
             target = target_all[session]['anno'][:, self.use_idx]
+            #### MODIFICATIONS BACKGROUND CLASS  ####
+            new_target = np.zeros((target.shape[0], target.shape[1] + 1))
+            new_target[:,1:] = target
+            
+            assert np.sum(new_target[:,0]) == 0, 'first row is not 0'
+            
+            background_vector = np.sum(target, axis=1).clip(0,1).astype(bool)
+            new_target [:, 0] = ~background_vector
+            
+            target = new_target
+            
             seed = np.random.randint(self.enc_steps) if phase == 'train' else 0
             for start, end in zip(
                     range(seed, target.shape[0], 1),  # self.enc_steps
@@ -96,7 +107,6 @@ class METEORDataLayer(data.Dataset):
                 # dec_target = self.get_dec_target(target[start:end + self.dec_steps])
                 dec_target = target[end:end + self.dec_steps]
                 distance_target, class_h_target = self.get_distance_target(target[start:end])
-                # set_trace()
                 self.inputs.append([session, start, end, enc_target, distance_target, class_h_target, dec_target])
 
 
@@ -139,17 +149,9 @@ class METEORDataLayer(data.Dataset):
         class_h_target = torch.tensor(class_h_target)
         dec_target = torch.tensor(dec_target)
         
-        if camera_inputs.shape[0] == 0:
-            print(f'session: {session}')
-            print(f'session in anno_file: {session in self.feature_all.keys()}')
-            print(f'start, end: {start, end}')
-            print(f'camera_inputs: {camera_inputs.shape}')
-            print(f'motion_inputs: {motion_inputs.shape}')
-            print(f'enc_target: {enc_target.shape}')
-            print(f'distance_target: {distance_target.shape}')
-            print(f'class_h_target: {class_h_target.shape}')
-            print(f'dec_target: {dec_target.shape}')
-        
+        for return_tensor in [camera_inputs, motion_inputs, enc_target, distance_target, class_h_target, dec_target]:
+            if return_tensor.dtype == torch.float16:
+                return_tensor = return_tensor.to(torch.float32)
         
         return camera_inputs, motion_inputs, enc_target, distance_target, class_h_target, dec_target
 

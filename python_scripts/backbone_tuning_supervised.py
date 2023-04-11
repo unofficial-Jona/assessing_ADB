@@ -29,59 +29,64 @@ from torch.cuda import amp
 # loading model and replacing head for fine-tuning 
 
 #%% 
+def train_one_epoch_supervised():
+    BATCH_SIZE = 64
+    checkpoint_path = "supervised_backbone.pth"
+    log_file = 'supervised_tuning_log.txt'
 
-model = swin_v2_b(weights= Swin_V2_B_Weights.DEFAULT)
-model.head = nn.Linear(model.head.in_features, 4)
+    # Training parameters#
+    log_interval = 5
+    save_interval = 1000
 
-checkpoint_path = "pretrained_backbone.pth"
-if os.path.exists(checkpoint_path):
-    model.load_state_dict(torch.load(checkpoint_path))
     
-# disabled cause of downgrade from pytorch 2.0.0 to 1.13
-# model = torch.compile(model)
+    model = swin_v2_b(weights= Swin_V2_B_Weights.DEFAULT)
+    model.head = nn.Linear(model.head.in_features, 4)
 
-# %% [markdown]
-# # prepare dataset
-# the loader is supposed to iterate through the train set only
-# load annotations in init function
-# create list with sublists: [vid_name, frame, anno]
-# load image in __getitem__(self, idx) where idx indicates the sublist to access
-# ensure that if no .jpeg file is available, something (zeros) is returned
+    if os.path.exists(checkpoint_path):
+        model.load_state_dict(torch.load(checkpoint_path))
+        
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as f:
+            old_log = f.read()
+            epoch = int(old_log.split('\n')[-2].split(',')[0].split(':')[-1])
+    else:
+        epoch = 0
 
-# %%
-dataset = METEOR_Frames()
-dataloader = DataLoader(dataset, batch_size=64, shuffle=True, pin_memory=True, num_workers=4)
+    # disabled cause of downgrade from pytorch 2.0.0 to 1.13
+    # model = torch.compile(model)
+
+    # %% [markdown]
+    # # prepare dataset
+    # the loader is supposed to iterate through the train set only
+    # load annotations in init function
+    # create list with sublists: [vid_name, frame, anno]
+    # load image in __getitem__(self, idx) where idx indicates the sublist to access
+    # ensure that if no .jpeg file is available, something (zeros) is returned
+
+    # %%
+    dataset = METEOR_Frames()
+    dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, pin_memory=True, num_workers=4)
 
 
-# %% 
-# Set up the model, loss function, and optimizer
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = model.to(device)
-criterion = nn.BCEWithLogitsLoss(pos_weight = dataset.get_weights()).to(device)
-optimizer = Adam(model.parameters(), lr=1e-4)
+    # %% 
+    # Set up the model, loss function, and optimizer
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+    criterion = nn.BCEWithLogitsLoss(pos_weight = dataset.get_weights()).to(device)
+    optimizer = Adam(model.parameters(), lr=1e-4)
 
-# Training parameters
-num_epochs = 1
-log_interval = 5
-save_interval = 1000
 
-# Calculate total number of batches
-total_batches = len(dataloader)
-print(f"Total batches per epoch: {total_batches}")
+    # Create a GradScaler for mixed precision training
+    scaler = amp.GradScaler()
 
-log_file = 'supervised_tuning_log.txt'
-
-# Create a GradScaler for mixed precision training
-scaler = amp.GradScaler()
-
-# %% 
-# Training loop
-print('start training')
-for epoch in range(num_epochs):
+    # %% 
+    # Training loop
+    print(f'start training Epoch {epoch + 1}')
+    model.train()
     running_loss = 0.0
     epoch_start_time = time.time()
-    print(f'Epoch [{epoch + 1}/ {num_epochs}]')
-    progress_bar = tqdm(enumerate(dataloader), total=len(dataloader))
+    total_loss = 0.0
+    progress_bar = tqdm(enumerate(dataloader), total=len(dataloader), smoothing=0)
     for batch_idx, (images, annotations) in progress_bar:
         # Move data to device
         images = images.to(device)
@@ -110,6 +115,11 @@ for epoch in range(num_epochs):
 
         # Logging
         running_loss += loss.item()
+        total_loss += loss.item()
+        
+        pbar_loss = total_loss/(batch_idx + 1)
+        
+        progress_bar.set_description(f"Loss: {pbar_loss:.4f}")
         
         
         if batch_idx % log_interval == 0:
@@ -121,8 +131,11 @@ for epoch in range(num_epochs):
             torch.save(model.state_dict(), checkpoint_path)
 
         # Update the progress bar description with the average loss
-        progress_bar.set_description(f"Loss: {avg_loss:.4f}")
+
         
     epoch_time = time.time() - epoch_start_time
 
-    print(f"Epoch [{epoch + 1}/{num_epochs}] completed. Time taken: {epoch_time:.2f} seconds")
+    print(f"Epoch {epoch + 1} completed. Time taken: {epoch_time:.2f} seconds")
+
+if __name__ == '__main__':
+    train_one_epoch_supervised()

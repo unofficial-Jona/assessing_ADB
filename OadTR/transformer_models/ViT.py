@@ -161,9 +161,12 @@ class VisionTransformer_v3(nn.Module):
             x = sequence_input_rgb
         elif self.with_motion:
             x = sequence_input_flow
+            
+        if x.dtype == torch.float16:
+            x = x.to(torch.float32)
         
         # my modification
-        x = self.feature_dropout(x)
+        # x = self.feature_dropout(x)
         
         x = self.linear_encoding(x) # [128, 64, 1024]
         cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
@@ -174,6 +177,10 @@ class VisionTransformer_v3(nn.Module):
         
         # apply transformer
         x = self.encoder(x) # [128, 65, 1024]
+        
+        if not self.training:
+            self.x_last_attention = x
+        
         x = self.pre_head_ln(x)  # [128, 65, 1024]
         # x = self.after_dropout(x)  # add
         # decoder

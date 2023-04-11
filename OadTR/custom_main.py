@@ -14,6 +14,7 @@ from ipdb import set_trace
 import util as utl
 import os
 import utils
+from glob import glob
 
 from custom_dataset import METEORDataLayer
 from custom_utils import add_model_eval_to_comparison, generate_dict, ModelConfig
@@ -218,33 +219,33 @@ if __name__ == '__main__':
         data_info = json.load(f)['METEOR']
     args.train_session_set = data_info['train_session_set']
     args.test_session_set = data_info['test_session_set']
-    args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
+    args.all_class_name = ["Background", "OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
     
     args.lr_drop = 20
     args.lr_drop_size = 0.1
-    args.epochs = 60 # parameter is used in range(1, args.epochs)
+    args.epochs = 40 # parameter is used in range(1, args.epochs)
     args.batch_size = 512
     
-    args.decoder_layers = 4
+    args.decoder_layers = 3
     
     args.weighted_loss = True
     args.lr = 1e-3
     args.hidden_dim = 1024
     args.weight_decay = 5e-3
     
-    args.dropout_rate = 0.2
-    args.attn_dropout_rate = 0.2
-    args.decoder_attn_dropout_rate = 0.2
+    args.dropout_rate = 0.3
+    args.attn_dropout_rate = 0.3
+    args.decoder_attn_dropout_rate = 0.3
     
     args.positional_encoding_type = 'learned'
     
-    args.dim_feature = 2048
+    args.dim_feature = 4096
 
     
-    args.pickle_file_name = 'extraction_output_11-02-2023-18-33.pkl'
+    args.pickle_file_name = 'extraction_output_TSNFeatPipe.pkl'
     
-    args.output_dir = f'experiments/att_back/consider_fewer_actors'
+    args.output_dir = f'experiments/TSN_back/background'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     
     

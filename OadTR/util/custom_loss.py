@@ -4,6 +4,8 @@ from torch import nn
 from ipdb import set_trace
 
 
+
+
 class SetCriterion(nn.Module):
     """ This class computes the loss for DETR.
     The process happens in two steps:
@@ -37,8 +39,8 @@ class SetCriterion(nn.Module):
         self.size_average = True
         self.logsoftmax = nn.LogSoftmax(dim=1)
         
-        self.loss_fn = nn.MultiLabelSoftMarginLoss(weight = args.weight_values if args.weighted_loss else None)
-        
+        # self.loss_fn = nn.MultiLabelSoftMarginLoss(weight = args.weight_values if args.weighted_loss else None)
+        self.loss_fn = nn.BCEWithLogitsLoss().to(args.device)
         '''
         if args.weighted_loss:
             self.loss_fn = nn.BCEWithLogitsLoss(pos_weight = args.weight_values).to(args.device)
@@ -78,8 +80,14 @@ class SetCriterion(nn.Module):
         if torch.isnan(loss_ce).sum()>0:
             set_trace()
         """
-
+        # set_trace()
         loss_ce = self.loss_fn(input, targets)
+        
+        # add penalty to discurage learning of background and other classes together
+        background_and_action = torch.sigmoid(input[:, 0]) * torch.prod(torch.sigmoid(input[:, 1:]), dim=1)
+        penalty = torch.mean(background_and_action)
+        
+        loss_ce += penalty
         
         losses = {name: loss_ce}
 
@@ -121,6 +129,13 @@ class SetCriterion(nn.Module):
         """
 
         loss_ce = self.loss_fn(input, targets)
+        
+        # add penalty to discurage learning of background and other classes together
+        background_and_action = torch.sigmoid(input[:, 0]) * torch.prod(torch.sigmoid(input[:, 1:]), dim=1)
+        penalty = torch.mean(background_and_action)
+        
+        loss_ce += penalty
+        
         
         losses = {name: loss_ce}
 
