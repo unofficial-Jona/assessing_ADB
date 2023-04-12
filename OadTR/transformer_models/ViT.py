@@ -11,10 +11,9 @@ from .PositionalEncoding import (
 )
 
 from pdb import set_trace
+import warnings
 
 __all__ = ['ViT_B16', 'ViT_B32', 'ViT_L16', 'ViT_L32', 'ViT_H14']
-
-
 class VisionTransformer_v3(nn.Module):
     def __init__(
         self,
@@ -33,7 +32,9 @@ class VisionTransformer_v3(nn.Module):
         positional_encoding_type="learned", with_camera=True, with_motion=True, num_channels=3072,
     ):
         super(VisionTransformer_v3, self).__init__()
-
+        
+        warnings.warn("ReLu is called on outputs before they're returned")
+        
         assert embedding_dim % num_heads == 0
         assert img_dim % patch_dim == 0
         self.with_camera = with_camera
@@ -154,6 +155,7 @@ class VisionTransformer_v3(nn.Module):
         # self.merge_fc = nn.Linear(d_model, 1)
         # self.merge_sigmoid = nn.Sigmoid()
 
+        
     def forward(self, sequence_input_rgb, sequence_input_flow):
         if self.with_camera and self.with_motion:
             x = torch.cat((sequence_input_rgb, sequence_input_flow), 2) # [128, 64, 4096]
@@ -200,6 +202,10 @@ class VisionTransformer_v3(nn.Module):
         x = torch.cat((self.to_cls_token(x[:, -1]), dec_for_token), dim=1) # [128, 2048]
         x = self.mlp_head(x) # [128,7]
         # x = F.log_softmax(x, dim=-1)
+        # set_trace()
+        
+        x = F.relu(x)
+        dec_cls_out = F.relu(dec_cls_out)
 
         return x, dec_cls_out # [128,7], [128, 8, 7]
 

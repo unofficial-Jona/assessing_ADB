@@ -10,8 +10,28 @@ import datetime
 import pickle
 from typing import Optional, List
 import torch
+import torch.nn as nn
 import torch.distributed as dist
+import torch.nn.init as init
 
+
+
+def weight_init(m):
+    if isinstance(m, nn.Conv1d):
+        init.kaiming_uniform_(m.weight)
+        m.bias.data.zero_()
+    elif isinstance(m, nn.Linear):
+        init.xavier_uniform_(m.weight)
+        if m.bias is not None:
+            m.bias.data.zero_()
+    elif isinstance(m, nn.LayerNorm):
+        m.bias.data.zero_()
+        m.weight.data.fill_(1.0)
+    else:
+        # Default initialization for other layer types
+        for param in m.parameters():
+            if len(param.shape) > 1:  # Only initialize weight parameters, not biases
+                init.xavier_uniform_(param)
 
 def get_actionness(ti_anno):
     class_line = np.argmax(ti_anno, axis=1)

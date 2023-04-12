@@ -1,0 +1,197 @@
+python custom_main.py
+lr:0.001
+batch_size:512
+weight_decay:0.005
+epochs:40
+resize_feature:False
+lr_drop:20
+lr_drop_size:0.1
+clip_max_norm:1.0
+dataparallel:False
+removelog:False
+use_flow:True
+version:v3
+query_num:8
+decoder_layers:3
+decoder_embedding_dim:1024
+decoder_embedding_dim_out:1024
+decoder_attn_dropout_rate:0.3
+decoder_num_heads:4
+classification_pred_loss_coef:0.5
+enc_layers:64
+lr_backbone:0.0001
+feature:{'fps': 30, 'rgb_extractor': 'TSNFeatPipe', 'flow_extractor': 'GMFlowNetModel', 'extraction_time': '03-04-2023-15-20'}
+dim_feature:4096
+patch_dim:1
+embedding_dim:1024
+num_heads:8
+num_layers:3
+attn_dropout_rate:0.3
+positional_encoding_type:learned
+hidden_dim:1024
+dropout_rate:0.3
+numclass:5
+classification_x_loss_coef:0.3
+classification_h_loss_coef:1
+similar_loss_coef:0.1
+margin:1.0
+weighted_loss:True
+weight_values:tensor([  3.1360,  13.3841,  33.7507, 184.0014], dtype=torch.float64)
+dataset_file:../../../pvc-meteor/features/METEOR_info.json
+frozen_weights:None
+thumos_data_path:/home/dancer/mycode/Temporal.Online.Detection/Online.TRN.Pytorch/preprocess/
+thumos_anno_path:data/thumos_{}_anno.pickle
+remove_difficult:False
+device:cuda
+binary_label:False
+output_dir:experiments/TSN_back/check
+seed:20
+resume:
+start_epoch:1
+eval:False
+num_workers:8
+use_frequent:True
+use_infrequent:False
+pickle_file_name:extraction_output_TSNFeatPipe.pkl
+world_size:1
+dist_url:tcp://127.0.0.1:12342
+all_class_name:['Background', 'OverTaking', 'LaneChange', 'WrongLane', 'Cutting']
+distributed:False
+number of params: 54701066
+python custom_main.py
+lr:0.001
+batch_size:512
+weight_decay:0.005
+epochs:40
+resize_feature:False
+lr_drop:20
+lr_drop_size:0.1
+clip_max_norm:1.0
+dataparallel:False
+removelog:False
+use_flow:True
+version:v3
+query_num:8
+decoder_layers:3
+decoder_embedding_dim:1024
+decoder_embedding_dim_out:1024
+decoder_attn_dropout_rate:0.3
+decoder_num_heads:4
+classification_pred_loss_coef:0.5
+enc_layers:64
+lr_backbone:0.0001
+feature:{'fps': 30, 'rgb_extractor': 'TSNFeatPipe', 'flow_extractor': 'GMFlowNetModel', 'extraction_time': '03-04-2023-15-20'}
+dim_feature:4096
+patch_dim:1
+embedding_dim:1024
+num_heads:8
+num_layers:3
+attn_dropout_rate:0.3
+positional_encoding_type:learned
+hidden_dim:1024
+dropout_rate:0.3
+numclass:5
+classification_x_loss_coef:0.3
+classification_h_loss_coef:1
+similar_loss_coef:0.1
+margin:1.0
+weighted_loss:True
+weight_values:tensor([  3.1360,  13.3841,  33.7507, 184.0014], dtype=torch.float64)
+dataset_file:../../../pvc-meteor/features/METEOR_info.json
+frozen_weights:None
+thumos_data_path:/home/dancer/mycode/Temporal.Online.Detection/Online.TRN.Pytorch/preprocess/
+thumos_anno_path:data/thumos_{}_anno.pickle
+remove_difficult:False
+device:cuda
+binary_label:False
+output_dir:experiments/TSN_back/check
+seed:20
+resume:
+start_epoch:1
+eval:False
+num_workers:8
+use_frequent:True
+use_infrequent:False
+pickle_file_name:extraction_output_TSNFeatPipe.pkl
+world_size:1
+dist_url:tcp://127.0.0.1:12342
+all_class_name:['Background', 'OverTaking', 'LaneChange', 'WrongLane', 'Cutting']
+distributed:False
+number of params: 54701066
+python custom_main.py
+lr:0.001
+batch_size:512
+weight_decay:0.005
+epochs:40
+resize_feature:False
+lr_drop:20
+lr_drop_size:0.1
+clip_max_norm:1.0
+dataparallel:False
+removelog:False
+use_flow:True
+version:v3
+query_num:8
+decoder_layers:3
+decoder_embedding_dim:1024
+decoder_embedding_dim_out:1024
+decoder_attn_dropout_rate:0.3
+decoder_num_heads:4
+classification_pred_loss_coef:0.5
+enc_layers:64
+lr_backbone:0.0001
+feature:{'fps': 30, 'rgb_extractor': 'TSNFeatPipe', 'flow_extractor': 'GMFlowNetModel', 'extraction_time': '03-04-2023-15-20'}
+dim_feature:4096
+patch_dim:1
+embedding_dim:1024
+num_heads:8
+num_layers:3
+attn_dropout_rate:0.3
+positional_encoding_type:learned
+hidden_dim:1024
+dropout_rate:0.3
+numclass:5
+classification_x_loss_coef:0.3
+classification_h_loss_coef:1
+similar_loss_coef:0.1
+margin:1.0
+weighted_loss:True
+weight_values:tensor([  3.1360,  13.3841,  33.7507, 184.0014], dtype=torch.float64)
+dataset_file:../../../pvc-meteor/features/METEOR_info.json
+frozen_weights:None
+thumos_data_path:/home/dancer/mycode/Temporal.Online.Detection/Online.TRN.Pytorch/preprocess/
+thumos_anno_path:data/thumos_{}_anno.pickle
+remove_difficult:False
+device:cuda
+binary_label:False
+output_dir:experiments/TSN_back/check
+seed:20
+resume:
+start_epoch:1
+eval:False
+num_workers:8
+use_frequent:True
+use_infrequent:False
+pickle_file_name:extraction_output_TSNFeatPipe.pkl
+world_size:1
+dist_url:tcp://127.0.0.1:12342
+all_class_name:['Background', 'OverTaking', 'LaneChange', 'WrongLane', 'Cutting']
+distributed:False
+number of params: 54701066
+[Epoch-1] [IDU-{'fps': 30, 'rgb_extractor': 'TSNFeatPipe', 'flow_extractor': 'GMFlowNetModel', 'extraction_time': '03-04-2023-15-20'}] mAP: 0.2102 cAP: 0.5218
+
+dec_mAP all together: | 0.20722648535579177 |.
+dec_mAP_pred | 0 : 0.21022633212743194 |.
+dec_mAP_pred | 1 : 0.21193946503693492 |.
+dec_mAP_pred | 2 : 0.211242296571174 |.
+dec_mAP_pred | 3 : 0.210225157707931 |.
+dec_mAP_pred | 4 : 0.21024488173176503 |.
+dec_mAP_pred | 5 : 0.21027840686542804 |.
+dec_mAP_pred | 6 : 0.2103308146276756 |.
+dec_mAP_pred | 7 : 0.2103693046945394 |.
+all decoder map: | 0.2106 |.
+Background: ap = 0.6570, cap = 0.4688
+OverTaking: ap = 0.2890, cap = 0.5389
+LaneChange: ap = 0.0660, cap = 0.5113
+WrongLane: ap = 0.0336, cap = 0.5477
+Cutting: ap = 0.0056, cap = 0.5423

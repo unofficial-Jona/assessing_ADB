@@ -84,10 +84,10 @@ class SetCriterion(nn.Module):
         loss_ce = self.loss_fn(input, targets)
         
         # add penalty to discurage learning of background and other classes together
-        background_and_action = torch.sigmoid(input[:, 0]) * torch.prod(torch.sigmoid(input[:, 1:]), dim=1)
-        penalty = torch.mean(background_and_action)
+        # background_and_action = torch.sigmoid(input[:, 0]) * torch.prod(torch.sigmoid(input[:, 1:]), dim=1)
+        # penalty = torch.mean(background_and_action)
         
-        loss_ce += penalty
+        # loss_ce += penalty
         
         losses = {name: loss_ce}
 

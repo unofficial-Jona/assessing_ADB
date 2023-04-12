@@ -15,10 +15,9 @@ import util as utl
 import os
 import utils
 
-from custom_dataset import METEORDataLayer
+from custom_dataset import METEORDataLayer, METEOR_3D
 from custom_utils import add_model_eval_to_comparison
 import transformer_models
-from dataset import TRNTHUMOSDataLayer
 from train import train_one_epoch, evaluate
 from test import test_one_epoch
 import torch.nn as nn
@@ -50,9 +49,10 @@ def main(args):
 
     
     # prepare data_loader
-    dataset_train = METEORDataLayer(phase='train', args=args)
-    dataset_val = METEORDataLayer(phase='test', args=args)
-
+    dataset_train = METEOR_3D(phase='train', args=args, weights=args.weight_session_set)
+    dataset_val = METEOR_3D(phase='test', args=args)
+    
+    
     args.weight_values = dataset_train.weights
     
     if args.distributed:
@@ -64,7 +64,6 @@ def main(args):
 
     batch_sampler_train = torch.utils.data.BatchSampler(sampler_train, args.batch_size, drop_last=True)
 
-    set_trace()
     data_loader_train = DataLoader(dataset_train, batch_sampler=batch_sampler_train,
                                    pin_memory=True, num_workers=args.num_workers)
     data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
@@ -90,7 +89,7 @@ def main(args):
     random.seed(seed)
 
     # prepare model
-    model = transformer_models.VisionTransformer_v3(args=args, img_dim=args.enc_layers,   # VisionTransformer_v3
+    model = transformer_models.VisionTransformer_v4(args=args, img_dim=args.enc_layers,
                                                  patch_dim=args.patch_dim,
                                                  out_dim=args.numclass,
                                                  embedding_dim=args.embedding_dim,
@@ -101,12 +100,13 @@ def main(args):
                                                  attn_dropout_rate=args.attn_dropout_rate,
                                                  num_channels=args.dim_feature,
                                                  positional_encoding_type=args.positional_encoding_type,
-                                                 with_motion=args.use_flow
+                                                 with_motion=False
                                                    )
-
+    
+    model.apply(utils.weight_init)
     model.to(device)
 
-    summary(model) # , input_size = (args.batch_size, 1024, 2))
+    summary(model)
     
     # prepare loss
     loss_need = [
@@ -134,8 +134,8 @@ def main(args):
                                  weight_decay=args.weight_decay,
                                  )
     # set up lr_scheduler
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=args.lr_drop_size)
-
+    # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=args.lr_drop_size)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0)
     
     if args.frozen_weights is not None:
         checkpoint = torch.load(args.frozen_weights, map_location='cpu')
@@ -216,17 +216,17 @@ if __name__ == '__main__':
         data_info = json.load(f)['METEOR']
     args.train_session_set = data_info['train_session_set']
     args.test_session_set = data_info['test_session_set']
-    args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
+    args.all_class_name = ["Background", "OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
     
     args.lr_drop = 20
-    args.epochs = 80 # parameter is used in range(1, args.epochs) --> 10 iterations
+    args.epochs = 21 # parameter is used in range(1, args.epochs) --> 10 iterations
     args.batch_size = 1024
     
-    args.pickle_file_name = 'extraction_output_11-02-2023-18-33.pkl' # links to attention backbone
-    
+    args.pickle_file_name = 'colar/extraction_output_colar.pkl' # links to attention backbone
+    args.positional_encoding_type = 'learned'
     args.weighted_loss = True
-    args.lr = 1e-3
+    args.lr = 1e-4
     args.hidden_dim = 1024
     args.weight_decay = 5e-3
     
@@ -239,9 +239,17 @@ if __name__ == '__main__':
     
     args.num_layers = 3
     args.decoder_layers = 4
-
-    args.output_dir = 'experiments/att_back/consider_fewer_actors'
-    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     
+    args.weight_session_set = 'recent'
+    args.output_dir = 'experiments/v4_model/recent_weights'
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)
     add_model_eval_to_comparison(args.ouput_dir)
+    
+    
+    args.weight_session_set = 'all'
+    args.output_dir = 'experiments/v4_model/all_weights'
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    main(args)
+    add_model_eval_to_comparison(args.ouput_dir)
+    

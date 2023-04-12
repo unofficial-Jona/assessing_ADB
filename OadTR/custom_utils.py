@@ -142,7 +142,7 @@ def eval_experiment(exp_dir, args, save_results=True, save_fig=True, checkpoint=
     dataloader_test = DataLoader(dataset_test, 512, drop_last=False, pin_memory=True, num_workers=args.num_workers)
 
     # instantite model, set to eval and move to devic
-    model = transformer_models.VisionTransformer_v3(args=args, img_dim=args.enc_layers,
+    model = transformer_models.VisionTransformer_v4(args=args, img_dim=args.enc_layers,
                                                 patch_dim=args.patch_dim,
                                                 out_dim=args.numclass,
                                                 embedding_dim=args.embedding_dim,

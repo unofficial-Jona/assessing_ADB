@@ -245,7 +245,7 @@ if __name__ == '__main__':
     
     args.pickle_file_name = 'extraction_output_TSNFeatPipe.pkl'
     
-    args.output_dir = f'experiments/TSN_back/background'
+    args.output_dir = f'experiments/TSN_back/check'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     
     

@@ -49,11 +49,11 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         enc_target = enc_target.to(device)
         distance_target = distance_target.to(device)
         class_h_target = class_h_target.to(device)
-        # set_trace()
+        
         dec_target = dec_target.to(device)
         
         enc_score_p0, dec_scores = model(camera_inputs, motion_inputs)
-
+        # set_trace()
         outputs = {
             'labels_encoder': enc_score_p0,  # [128, 22]
             'labels_decoder': dec_scores.view(-1, num_class),  # [128, 8, 22]
