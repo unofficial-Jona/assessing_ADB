@@ -132,3 +132,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# exclude colar code-backups
+colar/output/*
+!colar/output/**/*.txt
+!colar/output/**/*.png
+!colar/output/**/*.pkl
