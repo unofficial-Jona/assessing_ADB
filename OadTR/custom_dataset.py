@@ -203,7 +203,7 @@ class METEORDataLayer(data.Dataset):
 class METEOR_3D(data.Dataset):
     # class loading features extracted with 3D resnet --> __getitem__ should return same shape as 'original' METEORDataLayer.
     def __init__(self, args, phase='train', weights=False) -> None:
-        self.sessions = getattr(args,phase + '_session_set')
+        self.sessions = getattr(args, phase + '_session_set')
         self.enc_steps = args.enc_layers
         self.dec_steps = args.query_num
         self.inputs = list()
@@ -246,6 +246,8 @@ class METEOR_3D(data.Dataset):
             self.weights = get_weights_recent_frame(self.inputs)
         elif weights.lower() == 'all':
             self.weights = get_weights_entire_inputs(self.inputs)
+        elif weights.lower() == 'old':
+            self.weights = get_weights(target_all, self.sessions, self.use_idx)
         else:
             assert False, 'invalid argument for weights'
 

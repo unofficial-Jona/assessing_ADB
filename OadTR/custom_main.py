@@ -3,6 +3,7 @@ import datetime
 import json
 import random
 import time
+import warnings
 from pathlib import Path
 # from config import get_args_parser
 from custom_config import get_args_parser
@@ -16,7 +17,7 @@ import os
 import utils
 from glob import glob
 
-from custom_dataset import METEORDataLayer
+from custom_dataset import METEORDataLayer, METEOR_3D
 from custom_utils import add_model_eval_to_comparison, generate_dict, ModelConfig
 import transformer_models
 from dataset import TRNTHUMOSDataLayer
@@ -51,8 +52,8 @@ def main(args):
 
     
     # prepare data_loader
-    dataset_train = METEORDataLayer(phase='train', args=args)
-    dataset_val = METEORDataLayer(phase='test', args=args)
+    dataset_train = METEOR_3D(phase='train', args=args, weights='recent')
+    dataset_val = METEOR_3D(phase='test', args=args)
 
     args.weight_values = dataset_train.weights
     
@@ -91,7 +92,8 @@ def main(args):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-
+    
+    print('use flow: ', args.use_flow)
     # prepare model
     model = transformer_models.VisionTransformer_v3(args=args, img_dim=args.enc_layers,   # VisionTransformer_v3
                                                  patch_dim=args.patch_dim,
@@ -137,7 +139,9 @@ def main(args):
                                  weight_decay=args.weight_decay,
                                  )
     # set up lr_scheduler
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=args.lr_drop_size)
+    # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=args.lr_drop_size)
+    warnings.warn('set T_max in lr_scheduler manually')
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0)
 
     
     if args.frozen_weights is not None:
@@ -222,42 +226,22 @@ if __name__ == '__main__':
     args.all_class_name = ["Background", "OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
     
-    args.lr_drop = 20
-    args.lr_drop_size = 0.1
-    args.epochs = 40 # parameter is used in range(1, args.epochs)
-    args.batch_size = 512
+    args.num_layers = 3
+    args.decoder_layers = 4
+    args.pickle_file_name = 'colar/extraction_output_colar.pkl'
+    args.weight_session_set = 'all'
+    args.output_dir = 'experiments/v4_model/std_model_long_train_04'
     
-    args.decoder_layers = 3
+    args.epochs = 60
     
-    args.weighted_loss = True
-    args.lr = 1e-3
-    args.hidden_dim = 1024
-    args.weight_decay = 5e-3
-    
-    args.dropout_rate = 0.3
-    args.attn_dropout_rate = 0.3
-    args.decoder_attn_dropout_rate = 0.3
-    
-    args.positional_encoding_type = 'learned'
-    
-    args.dim_feature = 4096
-
-    
-    args.pickle_file_name = 'extraction_output_TSNFeatPipe.pkl'
-    
-    args.output_dir = f'experiments/TSN_back/check'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    
-    
-    torch.cuda.empty_cache()
     main(args)
     add_model_eval_to_comparison(args.output_dir)
 
 
     # resume --> uncomment if resume training from checkpoint
     '''
-    arg_dict = generate_dict('experiments/att_back/overfit_dropout0_2/')
-    args = ModelConfig(**arg_dict)
+    
     
     with open(args.dataset_file, 'r') as f:
         data_info = json.load(f)['METEOR']
@@ -273,9 +257,9 @@ if __name__ == '__main__':
     args.lr_drop = 40
     main(args)
     add_model_eval_to_comparison(args.output_dir)
-    '''
+
     
-    '''
+
     # reduce overfitting(hopefully)
     args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim_overfit'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)

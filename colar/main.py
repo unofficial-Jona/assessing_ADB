@@ -15,7 +15,7 @@ from model.ColarModel import Colar_dynamic, Colar_static
 import torch.nn.functional as F
 import numpy as np
 from misc.utils import backup_code
-from misc.custom_utils import save_args, evaluate_exp
+from custom_utils import save_args, evaluate_save_results
 
 from pdb import set_trace
 
@@ -40,7 +40,7 @@ def train_one_epoch(model_dynamic,
 
         optimizer.zero_grad()
 
-        enc_score_static = model_static(inputs[:, -1:, :], device)
+        enc_score_static = model_static(inputs[:, -1:, :])
         loss_static = criterion(enc_score_static.squeeze(), target[:, -1:].squeeze(), 'ML')
         
         enc_score_dynamic = model_dynamic(inputs)
@@ -78,7 +78,7 @@ def evaluate(model_dynamic,
 
         with torch.no_grad():
             enc_score_dynamic = model_dynamic(inputs)
-            enc_score_static = model_static(inputs[:, -1:, :], device)
+            enc_score_static = model_static(inputs[:, -1:, :])
         
         enc_score_static = enc_score_static.permute(0, 2, 1)
         enc_score_static = enc_score_static[:, :, :5]
@@ -171,7 +171,7 @@ def main(args):
     print('Training time {}'.format(total_time_str))
     
     print('evaluating experiment')
-    evaluate_exp(os.path.join(*file_names[:-1]))
+    # evaluate_save_results(test_stats, log_file)
 
 
 if '__main__' == __name__:
@@ -183,8 +183,6 @@ if '__main__' == __name__:
     args.test_session_set = data_info['test_session_set']
     args.class_index = data_info['class_index']
     
-    args.output_dir = 'experiment/init/'
-    if args.output_dir:
-        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-
-    main(args)
+    for kmean in ['/workspace/pvc-meteor/features/colar/gmm_centers.pickle', '/workspace/pvc-meteor/features/colar/kmeans_centers.pickle', '/workspace/pvc-meteor/features/colar/exemplar.pickle']:
+        args.kmean = kmean
+        main(args)

@@ -16,9 +16,9 @@ def str2tensor(string):
 def get_args_parser():
     parser = argparse.ArgumentParser('Set IDU Online Detector', add_help=False)
     parser.add_argument('--lr', default=1e-4, type=float)     # 1e-4
-    parser.add_argument('--batch_size', default=128, type=int)
+    parser.add_argument('--batch_size', default=512, type=int)
     parser.add_argument('--weight_decay', default=1e-4, type=float)
-    parser.add_argument('--epochs', default=5, type=int)
+    parser.add_argument('--epochs', default=60, type=int)
     parser.add_argument('--resize_feature', default=False, type=str2bool, help='run resize prepare_data or not')
     parser.add_argument('--lr_drop', default=1, type=int)
     parser.add_argument('--lr_drop_size', default=0.5, type=float, help='')
@@ -26,7 +26,7 @@ def get_args_parser():
                         help='gradient clipping max norm')  # dataparallel
     parser.add_argument('--dataparallel', action='store_true', help='multi-gpus for training')
     parser.add_argument('--removelog', action='store_true', help='remove old log')
-    parser.add_argument('--use_flow', default=True, type=str2bool, help='use optical flow in model')
+    parser.add_argument('--use_flow', default=False, type=str2bool, help='use optical flow in model')
 
     # * Network
     parser.add_argument('--version', default='v3', type=str,
@@ -40,7 +40,7 @@ def get_args_parser():
                         help="decoder_embedding_dim")
     parser.add_argument('--decoder_embedding_dim_out', default=1024, type=int,  # 256 512 1024
                         help="decoder_embedding_dim_out")
-    parser.add_argument('--decoder_attn_dropout_rate', default=0.1, type=float,  # 0.1=0.2
+    parser.add_argument('--decoder_attn_dropout_rate', default=0.4, type=float,  # 0.1=0.2
                         help="rate of decoder_attn_dropout_rate")
     parser.add_argument('--decoder_num_heads', default=4, type=int,  # 8 4
                         help="decoder_num_heads")
@@ -51,7 +51,7 @@ def get_args_parser():
                         help="Number of enc_layers")
     parser.add_argument('--lr_backbone', default=1e-4, type=float,    # 2e-4
                         help="lr_backbone")
-    parser.add_argument('--feature', default='Anet2016_feature_v2', type=str,
+    parser.add_argument('--feature', default='3D_Resnet', type=str,
                         help="feature type")
     parser.add_argument('--dim_feature', default=2048, type=int,
                         help="input feature dims")
@@ -63,14 +63,14 @@ def get_args_parser():
                         help="input feature dims")
     parser.add_argument('--num_layers', default=3, type=int,
                         help="input feature dims")
-    parser.add_argument('--attn_dropout_rate', default=0.1, type=float,
+    parser.add_argument('--attn_dropout_rate', default=0.4, type=float,
                         help="attn dropout")
     parser.add_argument('--positional_encoding_type', default='learned', type=str,
                         help="fixed or learned")  # learned  fixed
 
     parser.add_argument('--hidden_dim', default=512, type=int,  # 512 1024 
                         help="Size of the embeddings")
-    parser.add_argument('--dropout_rate', default=0.1, type=float,
+    parser.add_argument('--dropout_rate', default=0.4, type=float,
                         help="Dropout applied ")
 
     parser.add_argument('--numclass', default=22, type=int,
@@ -85,7 +85,7 @@ def get_args_parser():
     parser.add_argument('--weight_values', default=0) 
 
     # dataset parameters
-    parser.add_argument('--dataset_file', type=str, default='../../../pvc-meteor/features/METEOR_info.json')
+    parser.add_argument('--dataset_file', type=str, default='/workspace/pvc-meteor/features/METEOR_info.json')
     parser.add_argument('--frozen_weights', type=str, default=None)
     parser.add_argument('--thumos_data_path', type=str, default='/home/dancer/mycode/Temporal.Online.Detection/'
                                                                 'Online.TRN.Pytorch/preprocess/')

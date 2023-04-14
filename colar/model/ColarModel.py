@@ -21,9 +21,11 @@ class Colar_static(nn.Module):
         for i in range(0, 5, 1):
             x = np.asarray(static[i])
             x = torch.from_numpy(x).squeeze().unsqueeze(0)
+            if x.dtype == torch.float64:
+                x = x.to(torch.float32)
+            
             self.static_feature.append(x.permute(0, 2, 1))
             self.static_feature[i] = self.static_feature[i].to(device)
-            
         self.device = device
 
     def weight(self, value, y_last):
@@ -51,7 +53,7 @@ class Colar_static(nn.Module):
         feature_w = torch.empty(x.shape[0], 5).to(self.device)
         for i in range(0, 5, 1):
             static_feature = self.static_feature[i]
-
+            
             # convert exemplar to key-value space
             Ek = self.conv1_3_Ek(static_feature)
             Ev = self.conv1_3_Ev(static_feature)
@@ -67,7 +69,7 @@ class Colar_static(nn.Module):
 
         feature_E = feature_E.to(self.device)
         
-        # changed from F.softmax to F.sigmoid to accomodate multilabel classification
+        # changed from F.softmax to torch.sigmoid to accomodate multilabel classification
         # feature_w = F.softmax(feature_w, dim=-1).unsqueeze(-1)
         
         feature_w = torch.sigmoid(feature_w).unsqueeze(-1)

@@ -39,7 +39,7 @@ def parse_args():
     parser.add_argument('--input_size', default=2048, type=int)
     parser.add_argument('--enc_layers', default=64, type=int)
     parser.add_argument('--numclass', default=5, type=int)
-    parser.add_argument('--batch_size', default=1024, type=int)
+    parser.add_argument('--batch_size', default=512, type=int)
     parser.add_argument('--overlap', default=1, type=int)
     parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--start_epoch', default=0, type=int)

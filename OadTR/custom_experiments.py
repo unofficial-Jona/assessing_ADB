@@ -4,6 +4,7 @@ import json
 import random
 import time
 from pathlib import Path
+import warnings
 # from config import get_args_parser
 from custom_config import get_args_parser
 import numpy as np
@@ -49,7 +50,7 @@ def main(args):
 
     
     # prepare data_loader
-    dataset_train = METEOR_3D(phase='train', args=args, weights=args.weight_session_set)
+    dataset_train = METEOR_3D(phase='train', args=args, weights='recent')
     dataset_val = METEOR_3D(phase='test', args=args)
     
     
@@ -103,7 +104,6 @@ def main(args):
                                                  with_motion=False
                                                    )
     
-    model.apply(utils.weight_init)
     model.to(device)
 
     summary(model)
@@ -135,6 +135,7 @@ def main(args):
                                  )
     # set up lr_scheduler
     # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=args.lr_drop_size)
+    warnings.warn('set T_max in lr_scheduler manually')
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0)
     
     if args.frozen_weights is not None:
@@ -169,6 +170,7 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             sampler_train.set_epoch(epoch)
+        # set_trace()
         train_stats = train_one_epoch(
             model, criterion, data_loader_train, optimizer, device, epoch,
             args.clip_max_norm)
@@ -219,37 +221,14 @@ if __name__ == '__main__':
     args.all_class_name = ["Background", "OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
     
-    args.lr_drop = 20
-    args.epochs = 21 # parameter is used in range(1, args.epochs) --> 10 iterations
-    args.batch_size = 1024
-    
-    args.pickle_file_name = 'colar/extraction_output_colar.pkl' # links to attention backbone
-    args.positional_encoding_type = 'learned'
-    args.weighted_loss = True
-    args.lr = 1e-4
-    args.hidden_dim = 1024
-    args.weight_decay = 5e-3
-    
-    args.dropout_rate = 0.2
-    args.attn_dropout_rate = 0.2
-    args.decoder_attn_dropout_rate = 0.2
-    args.dim_feature = 2048
-    
-    # args.resume = 'experiments/att_back/enc_layers_4_dec_layers_5/checkpoint0008.pth'
-    
     args.num_layers = 3
     args.decoder_layers = 4
-    
-    args.weight_session_set = 'recent'
-    args.output_dir = 'experiments/v4_model/recent_weights'
-    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    main(args)
-    add_model_eval_to_comparison(args.ouput_dir)
-    
-    
+    args.pickle_file_name = 'colar/extraction_output_colar.pkl'
     args.weight_session_set = 'all'
-    args.output_dir = 'experiments/v4_model/all_weights'
+    args.output_dir = 'experiments/v4_model/new_model_long_train_04'
+    
+    args.epochs = 60
+    
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)
-    add_model_eval_to_comparison(args.ouput_dir)
-    
+    add_model_eval_to_comparison(args.output_dir)

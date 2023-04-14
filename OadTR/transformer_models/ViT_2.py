@@ -111,8 +111,6 @@ class VisionTransformer_v4(nn.Module):
     ):
         super(VisionTransformer_v4, self).__init__()
         
-        warnings.warn("ReLu is called on outputs before they're returned")
-        
         assert embedding_dim % num_heads == 0
         assert img_dim % patch_dim == 0
         self.with_camera = with_camera
@@ -290,8 +288,8 @@ class VisionTransformer_v4(nn.Module):
         # set_trace()
         x = torch.cat((x, colar_x.squeeze()), dim=1)
         x = self.colar_mlp(x)
-        x = F.relu(x)
-        dec_cls_out = F.relu(dec_cls_out)
+        # x = F.relu(x)
+        # dec_cls_out = F.relu(dec_cls_out)
 
         return x, dec_cls_out # [128,7], [128, 8, 7]
 

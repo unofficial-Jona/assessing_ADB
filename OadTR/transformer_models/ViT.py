@@ -33,8 +33,6 @@ class VisionTransformer_v3(nn.Module):
     ):
         super(VisionTransformer_v3, self).__init__()
         
-        warnings.warn("ReLu is called on outputs before they're returned")
-        
         assert embedding_dim % num_heads == 0
         assert img_dim % patch_dim == 0
         self.with_camera = with_camera
@@ -169,6 +167,7 @@ class VisionTransformer_v3(nn.Module):
         
         # my modification
         # x = self.feature_dropout(x)
+        # set_trace()
         
         x = self.linear_encoding(x) # [128, 64, 1024]
         cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
@@ -203,9 +202,6 @@ class VisionTransformer_v3(nn.Module):
         x = self.mlp_head(x) # [128,7]
         # x = F.log_softmax(x, dim=-1)
         # set_trace()
-        
-        x = F.relu(x)
-        dec_cls_out = F.relu(dec_cls_out)
 
         return x, dec_cls_out # [128,7], [128, 8, 7]
 

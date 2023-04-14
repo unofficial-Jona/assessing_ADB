@@ -15,7 +15,7 @@ from model.ColarModel import Colar_dynamic, Colar_static, CombinedColar
 import torch.nn.functional as F
 import numpy as np
 from misc.utils import backup_code
-from misc.custom_utils import save_args
+from misc.custom_utils import save_args, evaluate_save_results
 
 from pdb import set_trace
 
@@ -86,8 +86,8 @@ def evaluate(model, data_loader, device):
 
 
 def main(args):
-    # log_file = backup_code(args.exp_name)
-    log_file = 'output/log.txt'
+    log_file = backup_code(args.exp_name)
+    # log_file = 'output/log.txt'
     seed = args.seed + cfg.get_rank()
     cfg.set_seed(seed)
     
@@ -142,8 +142,8 @@ def main(args):
     print('Training time {}'.format(total_time_str))
     
     print('evaluating experiment')
-    evaluate_running_experiment(test_stats, log_file)
-    
+    evaluate_save_results(test_stats, log_file)
+
 if '__main__' == __name__:
     args = cfg.parse_args()
     with open(args.dataset_file, 'r') as f:
@@ -153,9 +153,7 @@ if '__main__' == __name__:
     args.test_session_set = data_info['test_session_set']
     args.class_index = data_info['class_index']
     
-    for k_mean in ['/workspace/pvc-meteor/features/colar/kmeans_centers.pickle', '/workspace/pvc-meteor/features/colar/gmm_centers.pickle']:
-        for weights in ['all', 'recent']:
-            args.kmean = k_mean
-            args.use_weights = weights
-
-            main(args)
+    args.kmean = '/workspace/pvc-meteor/features/colar/gmm_centers.pickle'
+    for weights in ['all', 'recent']:
+        args.use_weights = weights
+        main(args)

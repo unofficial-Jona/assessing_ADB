@@ -1,0 +1,5 @@
+weighted_roc_auc: 0.6640999638636462
+weighted_f1: 0.6692388384632736
+weighted_precision: 0.6786680681970676
+weighted_recall: 0.6613983548766158
+
