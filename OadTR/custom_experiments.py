@@ -17,7 +17,7 @@ import os
 import utils
 
 from custom_dataset import METEORDataLayer, METEOR_3D
-from custom_utils import add_model_eval_to_comparison
+from custom_utils import add_model_eval_to_comparison, generate_dict, ModelConfig, get_multilabel_conf_mat, get_metric_per_category, get_weighted_metrics, get_predictions
 import transformer_models
 from train import train_one_epoch, evaluate
 from test import test_one_epoch
@@ -205,6 +205,15 @@ def main(args):
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log_train&test.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
+        
+        if epoch % 5 == 0:
+            with torch.no_grad():
+                y_true, y_pred = get_predictions(model, dataset_val, device)
+
+            get_multilabel_conf_mat(y_true, y_pred, label_names=args.all_class_name, save_loc=args.output_dir, epoch=epoch)
+            cat_metrics = get_metric_per_category(y_true, y_pred, label_names=args.all_class_name, save_loc=args.output_dir, epoch=epoch)
+            weighted_metrics = get_weighted_metrics(y_true, y_pred, save_loc=args.output_dir, epoch=epoch)
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
@@ -226,8 +235,8 @@ if __name__ == '__main__':
     args.pickle_file_name = 'colar/extraction_output_colar.pkl'
     args.weight_session_set = 'all'
     args.output_dir = 'experiments/v4_model/new_model_long_train_04'
-    
-    args.epochs = 60
+    args.resume = 'experiments/v4_model/new_model_long_train_04/checkpoint.pth'
+    args.epochs = 150
     
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)

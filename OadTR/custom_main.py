@@ -18,7 +18,7 @@ import utils
 from glob import glob
 
 from custom_dataset import METEORDataLayer, METEOR_3D
-from custom_utils import add_model_eval_to_comparison, generate_dict, ModelConfig
+from custom_utils import add_model_eval_to_comparison, generate_dict, ModelConfig, get_multilabel_conf_mat, get_metric_per_category, get_weighted_metrics, get_predictions
 import transformer_models
 from dataset import TRNTHUMOSDataLayer
 from train import train_one_epoch, evaluate
@@ -209,6 +209,14 @@ def main(args):
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log_train&test.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
+                
+        if epoch % 5 == 0:
+            with torch.no_grad():
+                y_true, y_pred = get_predictions(model, dataset_val, device)
+
+            get_multilabel_conf_mat(y_true, y_pred, label_names=args.all_class_name, save_loc=args.output_dir, epoch=epoch)
+            cat_metrics = get_metric_per_category(y_true, y_pred, label_names=args.all_class_name, save_loc=args.output_dir, epoch=epoch)
+            weighted_metrics = get_weighted_metrics(y_true, y_pred, save_loc=args.output_dir, epoch=epoch)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -232,8 +240,8 @@ if __name__ == '__main__':
     args.weight_session_set = 'all'
     args.output_dir = 'experiments/v4_model/std_model_long_train_04'
     
-    args.epochs = 60
-    
+    args.epochs = 150
+    args.resume = 'experiments/v4_model/std_model_long_train_04/checkpoint.pth'
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)
     add_model_eval_to_comparison(args.output_dir)

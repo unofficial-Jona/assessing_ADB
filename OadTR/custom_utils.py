@@ -136,7 +136,10 @@ def load_model_and_checkpoint(args, directory, checkpoint='default'):
     return model
 
 def get_predictions(model, dataset, device='cuda', batch_size=512):
-    model = model.eval().to(device)
+    if not model.is_cuda:
+        model = model.to('cuda')
+    
+    model = model.eval()
     
     sampler = torch.utils.data.SequentialSampler(dataset)
     data_loader = DataLoader(dataset, batch_size, drop_last=False, pin_memory=True)
@@ -159,9 +162,11 @@ def get_predictions(model, dataset, device='cuda', batch_size=512):
     
     return y_true, y_pred
 
-def get_weighted_metrics(y_true, y_pred, save_loc=''):
+def get_weighted_metrics(y_true, y_pred, save_loc='', **kwargs):
     metrics=[roc_auc_score, f1_score, precision_score, recall_score]
     metric_names = ['weighted_roc_auc', 'weighted_f1', 'weighted_precision', 'weighted_recall']
+    
+    epoch = kwargs.get('epoch','')
     
     out_dict = dict()
     for name, metric in zip(metric_names, metrics):
@@ -170,14 +175,19 @@ def get_weighted_metrics(y_true, y_pred, save_loc=''):
     
     if save_loc:
         with open(os.path.join(save_loc, 'evaluation.txt'), 'a') as f:
+            if epoch:
+                f.write('\n')
+                f.write(f'epoch: {epoch}')
             for k, v in out_dict.items():
                 f.write(f'{k}: {v}\n')
             f.write('\n')
     return out_dict
 
-def get_metric_per_category(y_true, y_pred, label_names=all_label_names, save_loc=''):
+def get_metric_per_category(y_true, y_pred, label_names=all_label_names, save_loc='', **kwargs):
     metrics = [f1_score, precision_score, recall_score]
     metric_names = ['f1', 'precision', 'recall']
+    
+    epoch = kwargs.get('epoch','')
     
     out_dict = dict()
     for i, label_name in enumerate(label_names):
@@ -191,9 +201,19 @@ def get_metric_per_category(y_true, y_pred, label_names=all_label_names, save_lo
         out_dict = {**out_dict, **label_dict}
 
     assert len(out_dict.keys()) == len(metric_names) * len(label_names), 'out dict seems wrong'
+    
+    if save_loc:           
+        with open(os.path.join(save_loc, 'evaluation.txt'), 'a') as f:
+            if epoch:
+                f.write('\n')
+                f.write(f'epoch: {epoch}')
+            for k, v in out_dict.items():
+                f.write(f'{k}: {v}\n')
+            f.write('\n')
+    
     return out_dict    
 
-def get_multilabel_conf_mat(y_true, y_pred, label_names=all_label_names, save_loc='', visualize=False):
+def get_multilabel_conf_mat(y_true, y_pred, label_names=all_label_names, save_loc='', visualize=False, **kwargs):
     """ convenience wrapper for skelarn.metrics.multilabel_confusion_matrix. Can visualize and 
 
     Args:
@@ -209,6 +229,8 @@ def get_multilabel_conf_mat(y_true, y_pred, label_names=all_label_names, save_lo
     confusion_matrices = multilabel_confusion_matrix(y_true, y_pred)
 
     fig, ax = plt.subplots(confusion_matrices.shape[0], 1, figsize=(15,15))
+    
+    epoch = kwargs.get('epoch', '')
                         
     for i, (mat, lab) in enumerate(zip(confusion_matrices, label_names)):
         disp = ConfusionMatrixDisplay(mat, display_labels=[lab + '-','+'+lab])
@@ -219,7 +241,10 @@ def get_multilabel_conf_mat(y_true, y_pred, label_names=all_label_names, save_lo
     if visualize:
         plt.show()
     if save_loc:
-        plt.savefig(os.path.join(save_loc, 'confusion_matrices.png')) #confusion matrices
+        file_name = 'confusion_matrices'
+        if epoch:
+            file_name += f'_{epoch}'
+        plt.savefig(os.path.join(save_loc, file_name + '.png')) #confusion matrices
     return confusion_matrices
 
 def evaluate_experiment(directory, **kwargs):
@@ -259,9 +284,9 @@ def evaluate_experiment(directory, **kwargs):
     assert y_pred.shape[1] == len(args.all_class_name), 'prediction shape and label names are off' 
     assert y_true.shape == y_pred.shape, 'label and prediction shape do not match'
     
-    get_multilabel_conf_mat(y_true, y_pred, label_names=args.all_class_name, save_loc=directory if save_fig else '')
-    cat_metrics = get_metric_per_category(y_true, y_pred, label_names=args.all_class_name, save_loc=directory if save_results else '')
-    weighted_metrics = get_weighted_metrics(y_true, y_pred, save_loc=directory if save_results else '')
+    get_multilabel_conf_mat(y_true, y_pred, label_names=args.all_class_name, save_loc=directory if save_fig else '', **kwargs)
+    cat_metrics = get_metric_per_category(y_true, y_pred, label_names=args.all_class_name, save_loc=directory if save_results else '', **kwargs)
+    weighted_metrics = get_weighted_metrics(y_true, y_pred, save_loc=directory if save_results else '', **kwargs)
     
     return {**weighted_metrics, **cat_metrics}
 
@@ -270,7 +295,7 @@ def add_model_eval_to_comparison(exp_dir, comparison_csv_path='experiments/resul
     exp_df = pd.DataFrame([returned_metrics.values()], columns = returned_metrics.keys(), index = [exp_dir.removeprefix('experiments/')])
     
     # check if comparion file exists, if so append experiment to it
-    if os.path.exists(comaprison_csv_path):
+    if os.path.exists(comparison_csv_path):
         old_df = pd.read_csv(comparison_csv_path, index_col=0)
         out_df = pd.concat([old_df, exp_df])
     else:
