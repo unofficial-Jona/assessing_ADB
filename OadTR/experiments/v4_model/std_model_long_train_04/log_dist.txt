@@ -1062,3 +1062,79 @@ LaneChange: ap = 0.1010, cap = 0.6248
 WrongLane: ap = 0.0445, cap = 0.6029
 Cutting: ap = 0.0129, cap = 0.7002
 python custom_main.py
+lr:0.0001
+batch_size:512
+weight_decay:0.0001
+epochs:150
+resize_feature:False
+lr_drop:1
+lr_drop_size:0.5
+clip_max_norm:1.0
+dataparallel:False
+removelog:False
+use_flow:False
+version:v3
+query_num:8
+decoder_layers:4
+decoder_embedding_dim:1024
+decoder_embedding_dim_out:1024
+decoder_attn_dropout_rate:0.4
+decoder_num_heads:4
+classification_pred_loss_coef:0.5
+enc_layers:64
+lr_backbone:0.0001
+feature:{'fps': 30, 'rgb_extractor': 'TSNFeatPipe', 'extraction_time': '06-04-2023-19-30'}
+dim_feature:2048
+patch_dim:1
+embedding_dim:1024
+num_heads:8
+num_layers:3
+attn_dropout_rate:0.4
+positional_encoding_type:learned
+hidden_dim:512
+dropout_rate:0.4
+numclass:5
+classification_x_loss_coef:0.3
+classification_h_loss_coef:1
+similar_loss_coef:0.1
+margin:1.0
+weighted_loss:True
+weight_values:tensor([  0.4497,   3.1033,  13.2707,  32.5574, 165.4141], dtype=torch.float64)
+dataset_file:/workspace/pvc-meteor/features/METEOR_info.json
+frozen_weights:None
+thumos_data_path:/home/dancer/mycode/Temporal.Online.Detection/Online.TRN.Pytorch/preprocess/
+thumos_anno_path:data/thumos_{}_anno.pickle
+remove_difficult:False
+device:cuda
+binary_label:False
+output_dir:experiments/v4_model/std_model_long_train_04
+seed:20
+resume:experiments/v4_model/std_model_long_train_04/checkpoint.pth
+start_epoch:1
+eval:False
+num_workers:8
+use_frequent:True
+use_infrequent:False
+pickle_file_name:colar/extraction_output_colar.pkl
+world_size:1
+dist_url:tcp://127.0.0.1:12342
+all_class_name:['Background', 'OverTaking', 'LaneChange', 'WrongLane', 'Cutting']
+distributed:False
+number of params: 59958794
+[Epoch-60] [IDU-{'fps': 30, 'rgb_extractor': 'TSNFeatPipe', 'extraction_time': '06-04-2023-19-30'}] mAP: 0.3094 cAP: 0.6841
+
+dec_mAP all together: | 0.30760653175361385 |.
+dec_mAP_pred | 0 : 0.3098969528427237 |.
+dec_mAP_pred | 1 : 0.3094112028807335 |.
+dec_mAP_pred | 2 : 0.30875747035289847 |.
+dec_mAP_pred | 3 : 0.3080987444290789 |.
+dec_mAP_pred | 4 : 0.3074124677547113 |.
+dec_mAP_pred | 5 : 0.3067909623124095 |.
+dec_mAP_pred | 6 : 0.3062941668926805 |.
+dec_mAP_pred | 7 : 0.3056348953057994 |.
+all decoder map: | 0.3078 |.
+Background: ap = 0.8537, cap = 0.7306
+OverTaking: ap = 0.5350, cap = 0.7624
+LaneChange: ap = 0.1011, cap = 0.6249
+WrongLane: ap = 0.0446, cap = 0.6038
+Cutting: ap = 0.0127, cap = 0.6989

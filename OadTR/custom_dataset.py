@@ -68,17 +68,16 @@ def get_weights_entire_inputs(inputs):
     frames_not_cat = total_frames - class_count
 
     assert frames_not_cat.min() >= 0, 'too few frames per category'
-
     weight_vector = frames_not_cat / class_count
     return torch.tensor(weight_vector)
 
 
 class METEORDataLayer(data.Dataset):
-    def __init__(self, args, phase='train') -> None:
+    def __init__(self, args, phase='train', weights = False) -> None:
         
         
-        self.data_root = '../../../pvc-meteor/features'
-        self.pickle_root = '../../../pvc-meteor/features'
+        self.data_root = '/workspace/pvc-meteor/features'
+        self.pickle_root = '/workspace/pvc-meteor/features'
         self.sessions = getattr(args,phase + '_session_set') # used to get video names from json file --> no need to split into train and test
         self.enc_steps = args.enc_layers
         self.dec_steps = args.query_num
@@ -97,9 +96,9 @@ class METEORDataLayer(data.Dataset):
         warnings.warn('modified to incorporate background class')
         
         self.feature_all = load_obj['features']
-        feature_dict = load_obj['meta']
-        feature_dict['fps'] = int(30 / feature_dict['fps'])
-        args.feature = feature_dict
+        # feature_dict = load_obj['meta']
+        # feature_dict['fps'] = int(30 / feature_dict['fps'])
+        # args.feature = feature_dict
         
 
         assert not (args.use_frequent and args.use_infrequent), "can't select frequent and infrequent categories at the same time"
@@ -116,12 +115,7 @@ class METEORDataLayer(data.Dataset):
             warnings.warn("args.all_class_names (defined in main) may needs to be updated.")
             self.use_idx = [0,1,2,3,4,5,6]
             
-        # set up weights for loss function
-        self.weights = get_weights(target_all, self.sessions, self.use_idx)
-        
-        
-        # set_trace()
-        
+
         # load and prepare annotations
         for session in self.sessions:
             
@@ -151,6 +145,18 @@ class METEORDataLayer(data.Dataset):
                 distance_target, class_h_target = self.get_distance_target(target[start:end])
                 self.inputs.append([session, start, end, enc_target, distance_target, class_h_target, dec_target])
 
+        # set up weights for loss function
+        if weights == False:
+            self.weights = None
+        elif weights.lower() == 'recent':
+            self.weights = get_weights_recent_frame(self.inputs)
+        elif weights.lower() == 'all':
+            self.weights = get_weights_entire_inputs(self.inputs)
+        elif weights.lower() == 'old':
+            self.weights = get_weights(target_all, self.sessions, self.use_idx)
+        else:
+            assert False, 'invalid argument for weights'
+        
 
             
     def get_dec_target(self, target_vector):
@@ -208,7 +214,7 @@ class METEOR_3D(data.Dataset):
         self.dec_steps = args.query_num
         self.inputs = list()
         
-        load_obj = pickle.load(open('/workspace/pvc-meteor/features/colar/extraction_output_colar.pkl', 'rb'))
+        load_obj = pickle.load(open('/workspace/pvc-meteor/features/features_i3d.pkl', 'rb'))
         
         self.feature_all = load_obj['features']
         target_all = load_obj['annotations']

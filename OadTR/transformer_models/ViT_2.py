@@ -285,7 +285,6 @@ class VisionTransformer_v4(nn.Module):
         x = torch.cat((self.to_cls_token(x[:, -1]), dec_for_token), dim=1) # [128, 2048]
         x = self.mlp_head(x) # [128,7]
         
-        # set_trace()
         x = torch.cat((x, colar_x.squeeze()), dim=1)
         x = self.colar_mlp(x)
         # x = F.relu(x)

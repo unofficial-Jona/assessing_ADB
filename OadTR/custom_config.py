@@ -26,7 +26,7 @@ def get_args_parser():
                         help='gradient clipping max norm')  # dataparallel
     parser.add_argument('--dataparallel', action='store_true', help='multi-gpus for training')
     parser.add_argument('--removelog', action='store_true', help='remove old log')
-    parser.add_argument('--use_flow', default=False, type=str2bool, help='use optical flow in model')
+    parser.add_argument('--use_flow', default=True, type=str2bool, help='use optical flow in model')
 
     # * Network
     parser.add_argument('--version', default='v3', type=str,
@@ -34,7 +34,7 @@ def get_args_parser():
     # decoder
     parser.add_argument('--query_num', default=8, type=int,
                         help="Number of query_num (prediction)")
-    parser.add_argument('--decoder_layers', default=5, type=int,
+    parser.add_argument('--decoder_layers', default=4, type=int,
                         help="Number of decoder_layers")
     parser.add_argument('--decoder_embedding_dim', default=1024, type=int,   # 1024
                         help="decoder_embedding_dim")

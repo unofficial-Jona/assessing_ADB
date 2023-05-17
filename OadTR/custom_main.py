@@ -52,8 +52,8 @@ def main(args):
 
     
     # prepare data_loader
-    dataset_train = METEOR_3D(phase='train', args=args, weights='recent')
-    dataset_val = METEOR_3D(phase='test', args=args)
+    dataset_train = METEORDataLayer(phase='train', args=args, weights=args.weight_session_set)
+    dataset_val = METEORDataLayer(phase='test', args=args)
 
     args.weight_values = dataset_train.weights
     
@@ -173,7 +173,7 @@ def main(args):
     # training
     print("Start training")
     start_time = time.time()
-    for epoch in range(args.start_epoch, args.epochs):
+    for epoch in range(args.start_epoch, args.epochs + 1):
         if args.distributed:
             sampler_train.set_epoch(epoch)
         train_stats = train_one_epoch(
@@ -184,18 +184,6 @@ def main(args):
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
             
-            # update every 5 epochs instead of --> extra checkpoint before LR drop and every 100 epochs 
-            if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 5 == 0:
-                checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
-            
-            for checkpoint_path in checkpoint_paths:
-                utils.save_on_master({
-                    'model': model_without_ddp.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'lr_scheduler': lr_scheduler.state_dict(),
-                    'epoch': epoch,
-                    'args': args,
-                }, checkpoint_path)
 
         test_stats = evaluate(
             model, criterion, data_loader_val, device, logger, args, epoch, nprocs=utils.get_world_size()
@@ -217,7 +205,19 @@ def main(args):
             get_multilabel_conf_mat(y_true, y_pred, label_names=args.all_class_name, save_loc=args.output_dir, epoch=epoch)
             cat_metrics = get_metric_per_category(y_true, y_pred, label_names=args.all_class_name, save_loc=args.output_dir, epoch=epoch)
             weighted_metrics = get_weighted_metrics(y_true, y_pred, save_loc=args.output_dir, epoch=epoch)
+            
+            checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+            
+        for checkpoint_path in checkpoint_paths:
+            utils.save_on_master({
+                'model': model_without_ddp.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'lr_scheduler': lr_scheduler.state_dict(),
+                'epoch': epoch,
+                'args': args,
+            }, checkpoint_path)
 
+            
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
@@ -236,45 +236,18 @@ if __name__ == '__main__':
     
     args.num_layers = 3
     args.decoder_layers = 4
-    args.pickle_file_name = 'colar/extraction_output_colar.pkl'
     args.weight_session_set = 'all'
-    args.output_dir = 'experiments/v4_model/std_model_long_train_04'
+    args.epochs = 51
     
-    args.epochs = 150
-    args.resume = 'experiments/v4_model/std_model_long_train_04/checkpoint.pth'
-    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    main(args)
-    add_model_eval_to_comparison(args.output_dir)
-
-
-    # resume --> uncomment if resume training from checkpoint
-    '''
+    files = {'features_att_15_new.pkl':2048, 'features_conv_15_new.pkl':4096, 'features_TSN.pkl':4096, 'features_att_30_new.pkl':2048}
     
+    for k, v in files.items():
+        print(f'backbone: {k}, features: {v}')
+        args.pickle_file_name = k
+        args.dim_feature = v
     
-    with open(args.dataset_file, 'r') as f:
-        data_info = json.load(f)['METEOR']
-    args.train_session_set = data_info['train_session_set']
-    args.test_session_set = data_info['test_session_set']
-    args.all_class_name = ["OverTaking", "LaneChange", "WrongLane", "Cutting"]
-    args.numclass = len(args.all_class_name)
-
+        args.output_dir = f'experiments/final/{args.pickle_file_name}'
     
-    args.output_dir = 'experiments/att_back/new_data_load'
-    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    args.epochs = 20
-    args.lr_drop = 40
-    main(args)
-    add_model_eval_to_comparison(args.output_dir)
-
-    
-
-    # reduce overfitting(hopefully)
-    args.output_dir = 'experiments/att_back/weig_loss_enc_2_dec_4_red_dim_overfit'
-    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    args.num_layers = 2
-    args.decoder_layers = 4
-    args.epochs = 20
-    args.weighted_loss = True
-    
-
-    '''
+        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+        main(args)
+        # add_model_eval_to_comparison(args.output_dir)

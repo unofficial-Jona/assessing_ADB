@@ -1,8 +1,7 @@
 # addaptations to 'normal feature extractor to acomodate the GMFlowNet model
 
 import torchvision.transforms.functional as TF
-from torchvision.models.optical_flow import raft_large
-from torchvision.models.optical_flow import Raft_Large_Weights
+from torchvision.models.optical_flow import raft_large, Raft_Large_Weights
 from torchvision.utils import flow_to_image
 from torchvision.models.feature_extraction import get_graph_node_names
 from torchvision.models.feature_extraction import create_feature_extractor
@@ -53,7 +52,7 @@ class FeatureExtractor():
             self.transforms = flow_weights.transforms()
 
         else:
-            self.flow_model = flow_model.to(self.device)
+            self.flow_model = raft_large(weights = Raft_Large_Weights.DEFAULT, progress=False).to(self.device)
             for param in self.flow_model.parameters():
                 param.requires_grad = False
             self.flow_model.eval()

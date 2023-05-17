@@ -136,8 +136,7 @@ def load_model_and_checkpoint(args, directory, checkpoint='default'):
     return model
 
 def get_predictions(model, dataset, device='cuda', batch_size=512):
-    if not model.is_cuda:
-        model = model.to('cuda')
+    model = model.to(device)
     
     model = model.eval()
     
