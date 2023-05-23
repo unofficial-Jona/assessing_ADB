@@ -52,8 +52,8 @@ def main(args):
 
     
     # prepare data_loader
-    dataset_train = METEORDataLayer(phase='train', args=args, weights=args.weight_session_set)
-    dataset_val = METEORDataLayer(phase='test', args=args)
+    dataset_train = METEOR_3D(phase='train', args=args, weights=args.weight_session_set)
+    dataset_val = METEOR_3D(phase='test', args=args)
 
     args.weight_values = dataset_train.weights
     
@@ -239,7 +239,7 @@ if __name__ == '__main__':
     args.weight_session_set = 'all'
     args.epochs = 51
     
-    files = {'features_att_15_new.pkl':2048, 'features_conv_15_new.pkl':4096, 'features_TSN.pkl':4096, 'features_att_30_new.pkl':2048}
+    files = {'features_i3d.pkl':2048}
     
     for k, v in files.items():
         print(f'backbone: {k}, features: {v}')
@@ -247,6 +247,9 @@ if __name__ == '__main__':
         args.dim_feature = v
     
         args.output_dir = f'experiments/final/{args.pickle_file_name}'
+        
+        warnings.warn('disabled optical flow')
+        args.use_flow = False
     
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
         main(args)

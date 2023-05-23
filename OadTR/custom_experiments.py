@@ -178,20 +178,6 @@ def main(args):
         lr_scheduler.step()
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
-            
-            # update after every epoch instead of --> extra checkpoint before LR drop and every 100 epochs 
-            if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 5 == 0:
-                checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
-
-            
-            for checkpoint_path in checkpoint_paths:
-                utils.save_on_master({
-                    'model': model_without_ddp.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'lr_scheduler': lr_scheduler.state_dict(),
-                    'epoch': epoch,
-                    'args': args,
-                }, checkpoint_path)
 
         test_stats = evaluate(
             model, criterion, data_loader_val, device, logger, args, epoch, nprocs=utils.get_world_size()
@@ -213,6 +199,17 @@ def main(args):
             get_multilabel_conf_mat(y_true, y_pred, label_names=args.all_class_name, save_loc=args.output_dir, epoch=epoch)
             cat_metrics = get_metric_per_category(y_true, y_pred, label_names=args.all_class_name, save_loc=args.output_dir, epoch=epoch)
             weighted_metrics = get_weighted_metrics(y_true, y_pred, save_loc=args.output_dir, epoch=epoch)
+            
+            checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+            
+        for checkpoint_path in checkpoint_paths:
+            utils.save_on_master({
+                'model': model_without_ddp.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'lr_scheduler': lr_scheduler.state_dict(),
+                'epoch': epoch,
+                'args': args,
+            }, checkpoint_path)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -232,12 +229,13 @@ if __name__ == '__main__':
     
     args.num_layers = 3
     args.decoder_layers = 4
-    args.pickle_file_name = 'colar/extraction_output_colar.pkl'
     args.weight_session_set = 'all'
-    args.output_dir = 'experiments/v4_model/new_model_long_train_04'
-    args.resume = 'experiments/v4_model/new_model_long_train_04/checkpoint.pth'
-    args.epochs = 150
+    args.epochs = 51
     
+    args.pickle_file_name = 'features_i3d.pkl'
+    args.dim_feature = 2048
+
+    args.output_dir = f'experiments/final/{args.pickle_file_name[:-4]}_old_model'
+
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)
-    add_model_eval_to_comparison(args.output_dir)
