@@ -16,6 +16,9 @@ from torchvision.utils import flow_to_image
 from torchvision.models import resnet50, ResNet50_Weights
 from torchvision.models.optical_flow import raft_large, Raft_Large_Weights
 from torchvision.models.feature_extraction import create_feature_extractor
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 
 from pdb import set_trace
 
@@ -44,7 +47,7 @@ def get_bbx_coordinates(zip_path):
     for track in xml_file['track']:
         actor_id = track['@id']
         actor_name = track['@label']
-        if actor_name == 'EgoVehicle':
+        if actor_name not in ['Car', 'MotorBike', 'Scooter']:
             continue
         track_tensor = torch.zeros((last_frame + 1, 4))
         for box in track['box']:
@@ -105,7 +108,7 @@ def reduce_framerate(frames, target_fps=15, source_fps = 30):
     assert source_fps % target_fps == 0, "Target FPS must be a divisor of the source FPS"
 
     frame_skip = int(source_fps / target_fps)
-    reduced_fps_video = frames[::frame_skip, :, :, :]
+    reduced_fps_video = frames[::frame_skip]
     return reduced_fps_video
 
 def get_agent_frames(video_name, frame_level_features=True, start_frame=0, length=64, **kwargs):
@@ -141,12 +144,14 @@ def get_agent_frames(video_name, frame_level_features=True, start_frame=0, lengt
         if not 'bbx' in v.keys():
             continue
         coordinate_tensor = v['bbx']
+        # reduce FPS of coordinate tensor and cut to correct times
+        coordinate_tensor = reduce_framerate(coordinate_tensor, target_fps = target_fps)[start_frame:start_frame + length]
+
+        # save reduced bbx tensor instead of the old one
+        v.update({'bbx': coordinate_tensor})
+
         # generate mask
-        mask = coordinates_to_masks(org_frames_shape, coordinate_tensor)
-        # apply FPS change
-        mask = reduce_framerate(mask, target_fps = target_fps)
-        # cut mask (add + 1 so flow can be calculated)
-        mask = mask[start_frame: start_frame + length]
+        mask = coordinates_to_masks(frames.shape, coordinate_tensor)
 
         # if mask is all 1s, there is no bbx --> 
         if check_mask_for_bbx(mask):
@@ -156,7 +161,6 @@ def get_agent_frames(video_name, frame_level_features=True, start_frame=0, lengt
 
         coordinates[k].update({'masked_frames':agent_frames})
         # agent_dict.update({k:{'name':v['name'], 'masked_frames':agent_frames}})
-
     return coordinates
 
 def get_conv_features(agent_dict, **kwargs):
@@ -205,16 +209,74 @@ def get_predictions_from_model(feature_dict, model, **kwargs):
     device = kwargs.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
     model = model.eval().to(device)
     for k,v in  feature_dict.items():
-        rgb_features = v['rgb_features'].to(device)
-        flow_features = v['flow_features'].to(device)
-        out = model(rgb_features, flow_features)
-        feature_dict[k].update({'classification':out})
+        rgb_features = torch.from_numpy(v['rgb_features']).to(device)
+        flow_features = torch.from_numpy(v['flow_features']).to(device)
+        out = model(rgb_features.unsqueeze(0), flow_features.unsqueeze(0))
+        # use first element of tuple output (represents final classification score)
+        out = out[0]
+        # transform values into range [0,1]
+        out = torch.sigmoid(out)
+        out = out.detach().cpu().numpy()
+        feature_dict[k].update({'prediction':out})
     return feature_dict
+
+
+def get_prediction_differences(prediction_dict):
+    orig_predict = prediction_dict['-1']['prediction']
+    for k, v in prediction_dict.items():
+        # only agents that are in the scene
+        if 'prediction' not in v.keys():
+            continue
+        
+        agent_predict = v['prediction']
+        pred_dif = orig_predict - agent_predict
+        prediction_dict[k].update({'prediction_dif':pred_dif})
+    return prediction_dict
+
+
+
+def visualise_last_frame(prediction_dict, save_path=None):
+    last_frame = prediction_dict['-1']['masked_frames'][-1]
+    
+    assert last_frame.shape[0] == 3, "didn't pick last frame"
+    
+    fig, ax = plt.subplots(1)
+
+    # Display the image
+    ax.imshow(last_frame)
+
+    for k, v in prediction_dict.items():
+        # ignore if agent is not in scene
+        if 'prediction' not in v.keys():
+            continue
+        # ignore if agent is not in last frame
+        if v['bbx'][-1].sum(dim=1) == 0:
+            continue
+        # check if there is any value > 0 in predictions (except for background: v['prediction_dif][1:])
+        # if it is: color = green, else red
+        color = 'green' if (v['prediction_dif'][1:].any() > 0) else 'red'
+        
+        # retrieve coordinates for rectangle
+        xtl, ytl, xbr, ybr = v['bbx'][-1]
+
+        # draw rectangle using these coordinates
+        rect = patches.Rectangle((xtl, ytl), xbr-xtl, ybr-ytl, linewidth=1, edgecolor=color, facecolor='none')
+        ax.add_patch(rect)
+
+        # write prediction differences above bounding box
+        pred_diff_str = ', '.join(map(str, v['prediction_dif'][1:].tolist()))
+        plt.text(xtl, ytl, pred_diff_str, fontsize=10, ha='left', va='bottom', color=color)
+
+    # Save the figure if a path is specified
+    if save_path is not None:
+        plt.savefig(save_path)
+    else:
+        plt.show()
 
 if __name__ == '__main__':
     # define files for testing purposes
     TEST_NAME = 'REC_2020_09_08_04_51_57_F.MP4'
-    MODEL_DIR = 'OadTR/experiments/final/features_conv_15_new.pkl/'
+    MODEL_DIR = '/workspace/persistent/thesis/OadTR/experiments/final/features_conv_15_new.pkl/'
     
     agent_dict = get_agent_frames(TEST_NAME)
     out_features = get_conv_features(agent_dict)
