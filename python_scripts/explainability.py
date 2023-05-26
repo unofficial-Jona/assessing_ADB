@@ -2,27 +2,31 @@ import sys
 sys.path.append("/workspace/persistent/thesis/OadTR")
 
 import os
-
-from glob import glob
-from zipfile import ZipFile
 import xmltodict
 import numpy as np
 import pandas as pd
+import pickle
+import json
+
+from glob import glob
+from zipfile import ZipFile
+from pdb import set_trace
+from tqdm import tqdm
+
 import torch
 import torch.nn as nn
 from torchvision.io import read_video
 from torchvision.utils import flow_to_image
-
 from torchvision.models import resnet50, ResNet50_Weights
 from torchvision.models.optical_flow import raft_large, Raft_Large_Weights
 from torchvision.models.feature_extraction import create_feature_extractor
+
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.lines as mlines
 
 
-from pdb import set_trace
-
-# TODO: fix model input
 from custom_utils import get_args, load_model_and_checkpoint
 
 def get_bbx_coordinates(zip_path):
@@ -78,7 +82,6 @@ def coordinates_to_masks(frames_shape, coordinates):
 
         # Set the area inside the bounding box to 0
         mask[t, :, ytl:ybr, xtl:xbr] = 0
-
     return mask
 
 def check_mask_for_bbx(mask):
@@ -104,14 +107,18 @@ def apply_mask(frames, mask, pos=True):
     frames = frames * mask
     return frames
 
-def reduce_framerate(frames, target_fps=15, source_fps = 30):
+def reduce_framerate(frames, start_frame, length, target_fps=15, source_fps = 30):
     assert source_fps % target_fps == 0, "Target FPS must be a divisor of the source FPS"
 
     frame_skip = int(source_fps / target_fps)
-    reduced_fps_video = frames[::frame_skip]
+    # create np.array that handles the index to keep
+    keep_idx = np.arange(frames.shape[0])[:start_frame + 1][::-frame_skip][::-1][-length:]
+    
+    reduced_fps_video = frames[keep_idx]
     return reduced_fps_video
 
-def get_agent_frames(video_name, frame_level_features=True, start_frame=0, length=64, **kwargs):
+
+def get_agent_frames(video_name, frame_level_features=True, start_frame=65, length=64, **kwargs):
     if frame_level_features:
         length += 1
     
@@ -132,20 +139,19 @@ def get_agent_frames(video_name, frame_level_features=True, start_frame=0, lengt
     frames, _, _ = read_video(video_loc, pts_unit='sec', output_format='TCHW')
     org_frames_shape = frames.shape
     # apply FPS change to video
-    frames = reduce_framerate(frames, target_fps = target_fps)[start_frame:start_frame + length]
-    
+    frames = reduce_framerate(frames, start_frame, length, target_fps = target_fps)
     # prepare dictionary to handle agent_id, name and masked video
-    agent_dict = dict()
+
+
     # save original frames for comparison
     coordinates.update({'-1':{'name':'orig', 'masked_frames': frames}})
-    # agent_dict.update({'-1':{'name':'orig', 'masked_frames': frames}})
     # for agent in video: 
     for k, v in coordinates.items():        
         if not 'bbx' in v.keys():
             continue
         coordinate_tensor = v['bbx']
         # reduce FPS of coordinate tensor and cut to correct times
-        coordinate_tensor = reduce_framerate(coordinate_tensor, target_fps = target_fps)[start_frame:start_frame + length]
+        coordinate_tensor = reduce_framerate(coordinate_tensor, start_frame, length, target_fps = target_fps)
 
         # save reduced bbx tensor instead of the old one
         v.update({'bbx': coordinate_tensor})
@@ -160,10 +166,9 @@ def get_agent_frames(video_name, frame_level_features=True, start_frame=0, lengt
         agent_frames = apply_mask(frames, mask, pos=positive_mask)
 
         coordinates[k].update({'masked_frames':agent_frames})
-        # agent_dict.update({k:{'name':v['name'], 'masked_frames':agent_frames}})
     return coordinates
 
-def get_conv_features(agent_dict, **kwargs):
+def add_conv_features_to_dict(dic, **kwargs):
     device = kwargs.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
 
     rgb_extractor = create_feature_extractor(resnet50(weights = ResNet50_Weights.DEFAULT, progress=False), return_nodes={'flatten': 'flatten'}).eval().to(device)
@@ -176,7 +181,7 @@ def get_conv_features(agent_dict, **kwargs):
 
     feature_dict = dict()
 
-    for k, v in agent_dict.items():
+    for k, v in dic.items():
         if 'masked_frames' not in v.keys():
             continue
         assert v['masked_frames'].shape[0] == 64 + 1, 'wrong number of frames'
@@ -199,16 +204,17 @@ def get_conv_features(agent_dict, **kwargs):
         flow_features = flow_features.detach().cpu().numpy()
 
 
-        agent_dict[k].update({'rgb_features':rgb_features, 'flow_features':flow_features})
+        dic[k].update({'rgb_features':rgb_features, 'flow_features':flow_features})
         # feature_dict.update({k: {'name':v['name'], 'rgb_features':rgb_features, 'flow_features':flow_features}})
     
-    return agent_dict
+    return dic
 
-
-def get_predictions_from_model(feature_dict, model, **kwargs):
+def add_model_predictions_to_dict(feature_dict, model, **kwargs):
     device = kwargs.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
     model = model.eval().to(device)
     for k,v in  feature_dict.items():
+        if 'masked_frames' not in v.keys():
+            continue
         rgb_features = torch.from_numpy(v['rgb_features']).to(device)
         flow_features = torch.from_numpy(v['flow_features']).to(device)
         out = model(rgb_features.unsqueeze(0), flow_features.unsqueeze(0))
@@ -221,7 +227,7 @@ def get_predictions_from_model(feature_dict, model, **kwargs):
     return feature_dict
 
 
-def get_prediction_differences(prediction_dict):
+def add_prediction_differences_to_dict(prediction_dict):
     orig_predict = prediction_dict['-1']['prediction']
     for k, v in prediction_dict.items():
         # only agents that are in the scene
@@ -233,9 +239,63 @@ def get_prediction_differences(prediction_dict):
         prediction_dict[k].update({'prediction_dif':pred_dif})
     return prediction_dict
 
+def get_true_labels(vid_name, frame, **kwargs):
+    # load zip_file
+    # iterate through tracks
+    # if @name not in actors: skip
+    # for box in track: if box@frame != frame: skip
+    # return_dict with bbx + binary array --> indicate if action is present.
+    MAPPING = {'OverTaking':0, 'LaneChanging':1, 'LaneChanging(m)':1, 'RuleBreak':2, 'Cutting':3}
+    ATTRIBUTES = ['LaneChanging', 'LaneChanging(m)', 'OverTaking', 'Cutting', 'RuleBreak']
+    VALUES = ['True', 'true', 'WrongLane']
 
+    ANNO_DIR = kwargs.get('anno_dir', '/workspace/pvc-meteor/downloads/Video XML Annotations/')
+    zip_name = vid_name if vid_name.endswith('.zip') else vid_name[:-4] + '.zip'
+    zip_path = os.path.join(ANNO_DIR, zip_name)
+    zip_file = ZipFile(zip_path)
+    xml_file = xmltodict.parse(zip_file.read('annotations.xml'))['annotations']
 
-def visualise_last_frame(prediction_dict, save_path=None):
+    if not isinstance(xml_file['track'], list):
+        xml_file['track'] = [xml_file['track']]
+    
+    out_dict = dict()
+
+    for track in xml_file['track']:
+        actor_id = track['@id']
+        actor_name = track['@label']
+        if actor_name not in ['Car', 'MotorBike', 'Scooter']:
+            continue
+        track_dict = dict()
+        true_labels = [0,0,0,0]
+        # check if there is more elegant way to access frame in box
+        for box in track['box']:
+            if frame == int(box['@frame']):
+                xtl = box['@xtl']
+                ytl = box['@ytl']
+                xbr = box['@xbr']
+                ybr = box['@ybr']
+                
+                for attribute in box['attribute']:
+                    if attribute['@name'] in ATTRIBUTES and attribute['#text'] in VALUES:
+                        cat_i = MAPPING[attribute['@name']]
+                        true_labels[cat_i] = 1
+                
+                track_dict.update({'bbx': [xtl, ytl, xbr, ybr], 'true_labels':true_labels})
+                continue
+            else:
+                continue
+        if track_dict:
+            out_dict.update({actor_id:track_dict})
+    return out_dict
+
+def visualise_last_frame(prediction_dict, save_path=None, **kwargs):
+    video_name = kwargs.get('video_name', False)
+    frame = kwargs.get('frame', False)
+    
+    true_labels = False
+    if video_name and frame:
+        true_labels = get_true_labels(video_name, frame)
+
     last_frame = prediction_dict['-1']['masked_frames'][-1]
     
     assert last_frame.shape[0] == 3, "didn't pick last frame"
@@ -243,19 +303,25 @@ def visualise_last_frame(prediction_dict, save_path=None):
     fig, ax = plt.subplots(1)
 
     # Display the image
-    ax.imshow(last_frame)
+    ax.imshow(last_frame.permute(1,2,0))
+
+    # Create a colormap for the bounding boxes
+    colormap = matplotlib.colormaps['Set3']
+    num_bbx = len(prediction_dict.keys()) - 1  # subtract 1 because we're excluding '-1'
+    colors = [colormap(i) for i in np.linspace(0, 1, num_bbx)]
+
+    true_legend_handles = []
+
+    legend_handles = []
+    color_index = 0
 
     for k, v in prediction_dict.items():
-        # ignore if agent is not in scene
-        if 'prediction' not in v.keys():
+        # ignore if agent is not in scene, not in last frame, or entry corresponds to original video
+        if 'prediction' not in v.keys() or k == '-1' or v['bbx'][-1].sum() == 0:
             continue
-        # ignore if agent is not in last frame
-        if v['bbx'][-1].sum(dim=1) == 0:
-            continue
-        # check if there is any value > 0 in predictions (except for background: v['prediction_dif][1:])
-        # if it is: color = green, else red
-        color = 'green' if (v['prediction_dif'][1:].any() > 0) else 'red'
         
+        color = colors[color_index]
+
         # retrieve coordinates for rectangle
         xtl, ytl, xbr, ybr = v['bbx'][-1]
 
@@ -263,26 +329,122 @@ def visualise_last_frame(prediction_dict, save_path=None):
         rect = patches.Rectangle((xtl, ytl), xbr-xtl, ybr-ytl, linewidth=1, edgecolor=color, facecolor='none')
         ax.add_patch(rect)
 
-        # write prediction differences above bounding box
-        pred_diff_str = ', '.join(map(str, v['prediction_dif'][1:].tolist()))
-        plt.text(xtl, ytl, pred_diff_str, fontsize=10, ha='left', va='bottom', color=color)
+        # write prediction differences to legend objects
+        pred_diff_str = ',\t'.join(map(str, v['prediction_dif'].round(3).squeeze()[1:]))
+        legend_handle = mlines.Line2D([], [], color=color, marker='o', markersize=15, label=pred_diff_str)
+        legend_handles.append(legend_handle)
+
+        if true_labels:
+            label_list = true_labels[k]['true_labels']
+            true_label_str = f"OT: {label_list[0]}\tLC: {label_list[1]}\tWL: {label_list[2]}\tCT: {label_list[3]}"
+            true_legend_handle = mlines.Line2D([], [], color=color, marker='o', markersize=15, label=true_label_str)
+            true_legend_handles.append(true_legend_handle)
+
+
+        color_index += 1  # move to the next color for the next bounding box
+        
+        if video_name and frame:
+            ax.set_title(f"{video_name}, frame:{frame}")
+        
+    # Create the legend
+    legend1 = ax.legend(handles=legend_handles, bbox_to_anchor=(1.05, 1), loc='upper left')
+    legend1.set_title('Prediction differences')
+
+    ax.add_artist(legend1)
+
+    if true_legend_handles:
+        # Second legend
+        legend2 = ax.legend(handles=true_legend_handles, bbox_to_anchor=(1.05, 0), loc='lower left')
+        legend2.set_title('True labels')
+
+        ax.add_artist(legend2)
 
     # Save the figure if a path is specified
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')  # use bbox_inches to include the legend in the saved image
     else:
         plt.show()
 
-if __name__ == '__main__':
-    # define files for testing purposes
-    TEST_NAME = 'REC_2020_09_08_04_51_57_F.MP4'
-    MODEL_DIR = '/workspace/persistent/thesis/OadTR/experiments/final/features_conv_15_new.pkl/'
+def check_video_for_interesting_frames(vid_name, **kwargs):
+    out_dict = {'LaneChanging':{}, 'LaneChanging(m)':{}, 'OverTaking':{}, 'Cutting':{}, 'RuleBreak':{}}
+    ANNO_DIR = kwargs.get('anno_dir', '/workspace/pvc-meteor/downloads/Video XML Annotations/')
+    VID_DIR = kwargs.get('vid_dir', '/workspace/pvc-meteor/Raw_Videos/')
+    ATTRIBUTES = ['LaneChanging', 'LaneChanging(m)', 'OverTaking', 'Cutting', 'RuleBreak']
+    VALUES = ['True', 'true', 'WrongLane']
+    first_reasonable_frame = kwargs.get('first_frame', 65)
     
-    agent_dict = get_agent_frames(TEST_NAME)
-    out_features = get_conv_features(agent_dict)
+    zip_name = vid_name[:-4] + '.zip' if vid_name.endswith('.MP4') else vid_name
+    
+    if not vid_name.startswith(ANNO_DIR):
+        zip_path = os.path.join(ANNO_DIR, zip_name)
 
+    zip_file = ZipFile(zip_path)
+
+    xml_file = xmltodict.parse(zip_file.read('annotations.xml'))['annotations']
+
+    if not isinstance(xml_file['track'], list):
+        xml_file['track'] = [xml_file['track']]
+
+    for track in xml_file['track']:
+        actor_name = track['@label']
+        if actor_name not in ['Car', 'MotorBike', 'Scooter']:
+            continue
+        for box in track['box']:
+            frame = box['@frame']
+            for attribute in box['attribute']:
+                if attribute['@name'] in ATTRIBUTES and attribute['#text'] in VALUES:
+                    if vid_name not in out_dict[attribute['@name']].keys():
+                        out_dict[attribute['@name']].update({vid_name:[frame]})
+                    else:
+                        out_dict[attribute['@name']][vid_name].append(frame)
+
+    # First, merge 'LaneChanging(m)' into 'LaneChanging'
+    out_dict['LaneChanging'] = {**out_dict['LaneChanging'], **out_dict['LaneChanging(m)']}
+    out_dict['WrongLane'] = out_dict['RuleBreak']
+    # Then, delete the 'LaneChanging(m)' entry
+    del out_dict['LaneChanging(m)']
+    del out_dict['RuleBreak']
+
+    return out_dict
+
+def search_dir_for_interesting_frames(dir='/workspace/pvc-meteor/Raw_Videos/', save=False):
+    out_dict = {'LaneChanging':{}, 'OverTaking':{}, 'Cutting':{}, 'WrongLane':{}}
+    name = ''
+    counter = 0
+    for vid_name in tqdm(os.listdir(dir), desc=name):
+        try: 
+            vid_dict = check_video_for_interesting_frames(vid_name)
+
+        except: 
+            continue
+        counter += 1
+        for key in out_dict.keys():
+            out_dict[key].update(vid_dict[key])
+
+        name = vid_name
+
+    if save:
+        with open(os.path.join(save, 'interesting_frames.pkl'), 'wb') as f:
+            pickle.dump(out_dict, f)
+    print(f'extracted frames from {counter}/{len(os.listdir(dir))} videos')
+    return out_dict
+
+def conv_workflow(vid_name, frame, model, save_path=None):
+    agent_dict = get_agent_frames(video_name=vid_name, start_frame=frame)
+    agent_dict = add_conv_features_to_dict(agent_dict)
+    agent_dict = add_model_predictions_to_dict(agent_dict, model)
+    agent_dict = add_prediction_differences_to_dict(agent_dict)
+    visualise_last_frame(agent_dict, save_path, video_name=vid_name, frame=frame)
+    return agent_dict
+
+if __name__ == '__main__':
+    MODEL_DIR = '/workspace/persistent/thesis/OadTR/experiments/final/features_conv_15_new.pkl'
     args = get_args(MODEL_DIR)
     model = load_model_and_checkpoint(args, MODEL_DIR)
 
-    out_dict = get_predictions_from_model(out_features, model)
-    print('HEUREKA!')
+    vid = 'REC_2020_10_10_22_55_26_F.MP4'
+    frame = 1115
+
+    conv_workflow(vid, frame, model)
+    # out = get_true_bbx(vid, frame)
+    # print(out)
