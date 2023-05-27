@@ -125,7 +125,7 @@ def get_agent_frames(video_name, frame_level_features=True, start_frame=65, leng
     # define paths to original videos
     ANNO_DIR = kwargs.get('anno_dir', '/workspace/pvc-meteor/downloads/Video XML Annotations/')
     VID_DIR = kwargs.get('vid_dir', '/workspace/pvc-meteor/Raw_Videos/')
-    positive_mask = kwargs.get('pos', True)
+    positive_mask = kwargs.get('pos_mask', True)
     target_fps = kwargs.get('FPS', 15)
     
     zip_loc = os.path.join(ANNO_DIR, video_name[:-4] + '.zip')
@@ -184,7 +184,7 @@ def add_conv_features_to_dict(dic, **kwargs):
     for k, v in dic.items():
         if 'masked_frames' not in v.keys():
             continue
-        assert v['masked_frames'].shape[0] == 64 + 1, 'wrong number of frames'
+        assert v['masked_frames'].shape[0] == 64 + 1, f"got {v['masked_frames'].shape[0]} frames instead of 65"
         frames = (v['masked_frames']/255).to(device)
 
         flow_stack_1 = frames[:-1]
@@ -226,7 +226,6 @@ def add_model_predictions_to_dict(feature_dict, model, **kwargs):
         feature_dict[k].update({'prediction':out})
     return feature_dict
 
-
 def add_prediction_differences_to_dict(prediction_dict):
     orig_predict = prediction_dict['-1']['prediction']
     for k, v in prediction_dict.items():
@@ -236,6 +235,7 @@ def add_prediction_differences_to_dict(prediction_dict):
         
         agent_predict = v['prediction']
         pred_dif = orig_predict - agent_predict
+        # pred_dif = torch.sigmoid(torch.from_numpy(pred_dif)).numpy()
         prediction_dict[k].update({'prediction_dif':pred_dif})
     return prediction_dict
 
@@ -288,7 +288,19 @@ def get_true_labels(vid_name, frame, **kwargs):
             out_dict.update({actor_id:track_dict})
     return out_dict
 
+
+
+def create_table_row(str1, str2, str3, str4, padding=10):
+    formatted_str1 = str1.ljust(padding)
+    formatted_str2 = str2.ljust(padding)
+    formatted_str3 = str3.ljust(padding)
+    formatted_str4 = str4.ljust(padding)
+    
+    table_row = f"{formatted_str1} {formatted_str2} {formatted_str3} {formatted_str4}"
+    return table_row
+
 def visualise_last_frame(prediction_dict, save_path=None, **kwargs):
+    plt.rcParams['font.family'] = 'Monospace'
     video_name = kwargs.get('video_name', False)
     frame = kwargs.get('frame', False)
     
@@ -306,14 +318,22 @@ def visualise_last_frame(prediction_dict, save_path=None, **kwargs):
     ax.imshow(last_frame.permute(1,2,0))
 
     # Create a colormap for the bounding boxes
-    colormap = matplotlib.colormaps['Set3']
+    colormap = matplotlib.colormaps['tab20']
     num_bbx = len(prediction_dict.keys()) - 1  # subtract 1 because we're excluding '-1'
-    colors = [colormap(i) for i in np.linspace(0, 1, num_bbx)]
-
-    true_legend_handles = []
-
+    colors = colormap(np.linspace(0, 1, num_bbx))
+    colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'cyan', 'magenta', 'lime', 'teal', 'olive', 'gold', 'navy', 'maroon', 'darkgreen', 'salmon', 'steelblue', 'sienna']
+    
     legend_handles = []
     color_index = 0
+
+    pred_array = prediction_dict['-1']['prediction'].round(3).squeeze()[1:]
+    value_str = create_table_row('OT: ' + str(pred_array[0]), 'LC: ' + str(pred_array[1]), 'WL: ' + str(pred_array[2]), 'CT: ' + str(pred_array[3]), 10)
+
+    value_str = 'orig pred: '.ljust(15) + value_str
+    start = mlines.Line2D([], [], color='white', marker='o', markersize=15, label=value_str)
+
+
+    legend_handles.append(start)
 
     for k, v in prediction_dict.items():
         # ignore if agent is not in scene, not in last frame, or entry corresponds to original video
@@ -330,15 +350,29 @@ def visualise_last_frame(prediction_dict, save_path=None, **kwargs):
         ax.add_patch(rect)
 
         # write prediction differences to legend objects
-        pred_diff_str = ',\t'.join(map(str, v['prediction_dif'].round(3).squeeze()[1:]))
-        legend_handle = mlines.Line2D([], [], color=color, marker='o', markersize=15, label=pred_diff_str)
-        legend_handles.append(legend_handle)
+        pred_diff = v['prediction'].round(3).squeeze()[1:]
+        value_str = create_table_row('OT: ' + str(pred_diff[0]), 'LC: ' + str(pred_diff[1]), 'WL: ' + str(pred_diff[2]), 'CT: ' + str(pred_diff[3]), 10)
+        # pred_diff_str = f"OT: {pred_diff[0]},\tLC: {pred_diff[1]},\tWL: {pred_diff[2]},\tCT: {pred_diff[3]}"
+        pred_str = 'prediction: '.ljust(15) + value_str
+
+
+        pred_diff = v['prediction_dif'].round(3).squeeze()[1:]
+        value_str = create_table_row('OT: ' + str(pred_diff[0]), 'LC: ' + str(pred_diff[1]), 'WL: ' + str(pred_diff[2]), 'CT: ' + str(pred_diff[3]), 10)
+        # pred_diff_str = f"OT: {pred_diff[0]},\tLC: {pred_diff[1]},\tWL: {pred_diff[2]},\tCT: {pred_diff[3]}"
+        pred_diff_str = 'diff to org: '.ljust(15) + value_str
+
+        pred_diff_str = pred_str + '\n' + pred_diff_str
 
         if true_labels:
             label_list = true_labels[k]['true_labels']
-            true_label_str = f"OT: {label_list[0]}\tLC: {label_list[1]}\tWL: {label_list[2]}\tCT: {label_list[3]}"
-            true_legend_handle = mlines.Line2D([], [], color=color, marker='o', markersize=15, label=true_label_str)
-            true_legend_handles.append(true_legend_handle)
+            value_str = create_table_row('OT: ' + str(label_list[0]), 'LC: ' + str(label_list[1]), 'WL: ' + str(label_list[2]), 'CT: ' + str(label_list[3]), 10)
+            
+            # true_label_str = f"OT: {label_list[0]}, LC: {label_list[1]}, WL: {label_list[2]}, CT: {label_list[3]}"
+            true_label_str = 'true labels: '.ljust(15) + value_str
+            pred_diff_str = true_label_str + '\n' + pred_diff_str
+
+        legend_handle = mlines.Line2D([], [], color=color, marker='o', markersize=15, label=pred_diff_str)
+        legend_handles.append(legend_handle)
 
 
         color_index += 1  # move to the next color for the next bounding box
@@ -347,23 +381,15 @@ def visualise_last_frame(prediction_dict, save_path=None, **kwargs):
             ax.set_title(f"{video_name}, frame:{frame}")
         
     # Create the legend
-    legend1 = ax.legend(handles=legend_handles, bbox_to_anchor=(1.05, 1), loc='upper left')
-    legend1.set_title('Prediction differences')
-
-    ax.add_artist(legend1)
-
-    if true_legend_handles:
-        # Second legend
-        legend2 = ax.legend(handles=true_legend_handles, bbox_to_anchor=(1.05, 0), loc='lower left')
-        legend2.set_title('True labels')
-
-        ax.add_artist(legend2)
+    ax.legend(handles=legend_handles, bbox_to_anchor=(1.05, 1), loc='upper left').set_title('Prediction differences')
 
     # Save the figure if a path is specified
     if save_path is not None:
         plt.savefig(save_path, bbox_inches='tight')  # use bbox_inches to include the legend in the saved image
+        plt.close(fig)
     else:
         plt.show()
+        plt.close(fig)
 
 def check_video_for_interesting_frames(vid_name, **kwargs):
     out_dict = {'LaneChanging':{}, 'LaneChanging(m)':{}, 'OverTaking':{}, 'Cutting':{}, 'RuleBreak':{}}
@@ -429,22 +455,68 @@ def search_dir_for_interesting_frames(dir='/workspace/pvc-meteor/Raw_Videos/', s
     print(f'extracted frames from {counter}/{len(os.listdir(dir))} videos')
     return out_dict
 
-def conv_workflow(vid_name, frame, model, save_path=None):
-    agent_dict = get_agent_frames(video_name=vid_name, start_frame=frame)
+def conv_workflow(vid_name, frame, model, save_path=None, **kwargs):
+    pos_mask = kwargs.get('pos_mask', False)
+    agent_dict = get_agent_frames(video_name=vid_name, start_frame=frame, pos_mask=pos_mask)
     agent_dict = add_conv_features_to_dict(agent_dict)
     agent_dict = add_model_predictions_to_dict(agent_dict, model)
     agent_dict = add_prediction_differences_to_dict(agent_dict)
     visualise_last_frame(agent_dict, save_path, video_name=vid_name, frame=frame)
-    return agent_dict
+
+def conv_workflow_both_masks(vid_name, frame, model, save_path=None):
+    agent_dict = get_agent_frames(video_name=vid_name, start_frame=frame, pos_mask=True)
+    agent_dict = add_conv_features_to_dict(agent_dict)
+    agent_dict = add_model_predictions_to_dict(agent_dict, model)
+    pos_mask_dict = add_prediction_differences_to_dict(agent_dict)
+
+    agent_dict = get_agent_frames(video_name=vid_name, start_frame=frame, pos_mask=False)
+    agent_dict = add_conv_features_to_dict(agent_dict)
+    agent_dict = add_model_predictions_to_dict(agent_dict, model)
+    neg_mask_dict = add_prediction_differences_to_dict(agent_dict)
+
+    for k, v in pos_mask_dict.items():
+        if 'prediction' not in v.keys():
+            continue
+        
+        pos_agent_pred = pos_mask_dict[k]['prediction']
+        neg_agent_pred = neg_mask_dict[k]['prediction']
+
+        total_agent_dif = np.abs(pos_agent_pred) + np.abs(neg_agent_pred)
+        # total_agent_dif = torch.sigmoid(torch.from_numpy(total_agent_dif)).numpy()
+
+        pos_mask_dict[k].update({'prediction_dif':total_agent_dif})
+    
+    visualise_last_frame(pos_mask_dict, save_path, video_name=vid_name, frame=frame)
 
 if __name__ == '__main__':
     MODEL_DIR = '/workspace/persistent/thesis/OadTR/experiments/final/features_conv_15_new.pkl'
     args = get_args(MODEL_DIR)
     model = load_model_and_checkpoint(args, MODEL_DIR)
 
+    with open('/workspace/pvc-meteor/features/interesting_frames.pkl', 'rb') as f:
+        interesting_frames = pickle.load(f)
+
+    for k in interesting_frames.keys():
+        i = 0
+        j = 0
+        while i <= 10:
+            category_video = list(interesting_frames[k].keys())[i + j]
+            vid_frame = list(interesting_frames[k][category_video])[-1]
+            try:
+                # conv_workflow(category_video, int(vid_frame), model, f'explain_frames/neg_mask/{k}_{i}', pos_mask=False)
+                conv_workflow(category_video, int(vid_frame), model, f'explain_frames/pos_mask/{k}_{i}')
+                # conv_workflow_both_masks(category_video, int(vid_frame), model, f'explain_frames/both_masks/{k}_{i}')
+            except:
+                print(category_video, vid_frame)
+                j += 1
+                continue
+            i += 1
+            
+    """
     vid = 'REC_2020_10_10_22_55_26_F.MP4'
     frame = 1115
 
-    conv_workflow(vid, frame, model)
+    conv_workflow(vid, frame, model, pos_mask=False)
     # out = get_true_bbx(vid, frame)
     # print(out)
+    """
