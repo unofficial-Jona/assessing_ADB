@@ -235,7 +235,7 @@ if __name__ == '__main__':
     args.pickle_file_name = 'features_i3d.pkl'
     args.dim_feature = 2048
 
-    args.output_dir = f'experiments/final/{args.pickle_file_name[:-4]}_old_model'
+    args.output_dir = f'experiments/final/{args.pickle_file_name[:-4]}_new_model'
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)

@@ -15,7 +15,7 @@ from model.ColarModel import Colar_dynamic, Colar_static, CombinedColar
 import torch.nn.functional as F
 import numpy as np
 from misc.utils import backup_code
-from misc.custom_utils import save_args, evaluate_save_results
+from custom_utils import save_args, evaluate_save_results
 
 from pdb import set_trace
 
@@ -153,7 +153,8 @@ if '__main__' == __name__:
     args.test_session_set = data_info['test_session_set']
     args.class_index = data_info['class_index']
     
-    args.kmean = '/workspace/pvc-meteor/features/colar/gmm_centers.pickle'
-    for weights in ['all', 'recent']:
-        args.use_weights = weights
-        main(args)
+    args.kmean = '/workspace/pvc-meteor/features/colar/exemplar.pickle'
+    args.epochs = 51
+    args.exp_name = 'colar_r2'
+    args.use_weights = 'all'
+    main(args)

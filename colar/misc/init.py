@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--exp_name', default='ColarMETEOR')
 
     # please adjust the path
-    parser.add_argument('--data_root', default='/workspace/pvc-meteor/features/colar/extraction_output_colar.pkl')
+    parser.add_argument('--data_root', default='/workspace/pvc-meteor/features/features_i3d.pkl')
     parser.add_argument('--dataset_file', type=str, default='/workspace/pvc-meteor/features/METEOR_info.json')
     parser.add_argument('--kmean', type=str, default='/workspace/pvc-meteor/features/colar/exemplar.pickle')
     parser.add_argument('--checkpoint', type=str, default='./checkpoint/THUMOS-TSN-Kinetics.pth')
@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument('--batch_size', default=512, type=int)
     parser.add_argument('--overlap', default=1, type=int)
     parser.add_argument('--num_workers', default=8, type=int)
-    parser.add_argument('--start_epoch', default=0, type=int)
+    parser.add_argument('--start_epoch', default=1, type=int)
     parser.add_argument('--epochs', default=20, type=int)
     parser.add_argument('--output_dir', default='checkpoint')
     parser.add_argument('--clip_max_norm', default=1., type=float)

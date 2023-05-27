@@ -171,7 +171,7 @@ def main(args):
     print('Training time {}'.format(total_time_str))
     
     print('evaluating experiment')
-    # evaluate_save_results(test_stats, log_file)
+    evaluate_save_results(test_stats, log_file)
 
 
 if '__main__' == __name__:
@@ -185,4 +185,5 @@ if '__main__' == __name__:
     
     for kmean in ['/workspace/pvc-meteor/features/colar/gmm_centers.pickle', '/workspace/pvc-meteor/features/colar/kmeans_centers.pickle', '/workspace/pvc-meteor/features/colar/exemplar.pickle']:
         args.kmean = kmean
+        args.exp_name = kmean.split('/')[-1]
         main(args)
