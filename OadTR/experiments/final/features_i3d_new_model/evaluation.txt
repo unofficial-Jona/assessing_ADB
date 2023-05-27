@@ -1,0 +1,230 @@
+
+epoch: 5Background_f1: 0.809659027389603
+Background_precision: 0.821580905708322
+Background_recall: 0.7980781945607617
+OverTaking_f1: 0.5814931028358298
+OverTaking_precision: 0.5703170363488561
+OverTaking_recall: 0.5931159420289855
+LaneChange_f1: 0.11234443323242516
+LaneChange_precision: 0.17671957671957672
+LaneChange_recall: 0.08234714003944774
+WrongLane_f1: 0.0
+WrongLane_precision: 0.0
+WrongLane_recall: 0.0
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 5weighted_roc_auc: 0.69265262251072
+weighted_f1: 0.6877594523050515
+weighted_precision: 0.6968219262738111
+weighted_recall: 0.6810810810810811
+
+
+epoch: 10Background_f1: 0.8016146589259796
+Background_precision: 0.8255406604698958
+Background_recall: 0.7790364525939966
+OverTaking_f1: 0.5854265915980945
+OverTaking_precision: 0.5305141287284144
+OverTaking_recall: 0.6530193236714976
+LaneChange_f1: 0.0029182879377431907
+LaneChange_precision: 0.10714285714285714
+LaneChange_recall: 0.0014792899408284023
+WrongLane_f1: 0.0
+WrongLane_precision: 0.0
+WrongLane_recall: 0.0
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 10weighted_roc_auc: 0.6929967795760538
+weighted_f1: 0.6768355532733156
+weighted_precision: 0.6856340676920538
+weighted_recall: 0.6781433607520564
+
+
+epoch: 15Background_f1: 0.8181525863362558
+Background_precision: 0.7963859444119856
+Background_recall: 0.8411425045180059
+OverTaking_f1: 0.5196003074558032
+OverTaking_precision: 0.6164815121870336
+OverTaking_recall: 0.44903381642512075
+LaneChange_f1: 0.14717223650385602
+LaneChange_precision: 0.21125461254612546
+LaneChange_recall: 0.11291913214990137
+WrongLane_f1: 0.017077798861480076
+WrongLane_precision: 0.05844155844155844
+WrongLane_recall: 0.01
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 15weighted_roc_auc: 0.666224527713684
+weighted_f1: 0.6808917034826626
+weighted_precision: 0.6948618272216305
+weighted_recall: 0.6768213866039953
+
+
+epoch: 20Background_f1: 0.8139138685816567
+Background_precision: 0.796782638067894
+Background_recall: 0.8317979459602416
+OverTaking_f1: 0.5125053594397598
+OverTaking_precision: 0.6275813790689534
+OverTaking_recall: 0.4330917874396135
+LaneChange_f1: 0.17189994678020226
+LaneChange_precision: 0.18670520231213872
+LaneChange_recall: 0.15927021696252466
+WrongLane_f1: 0.025710419485791607
+WrongLane_precision: 0.0328719723183391
+WrongLane_recall: 0.021111111111111112
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 20weighted_roc_auc: 0.6650725177754334
+weighted_f1: 0.6780423261539577
+weighted_precision: 0.6956875574004927
+weighted_recall: 0.6697708578143361
+
+
+epoch: 25Background_f1: 0.8021782521912697
+Background_precision: 0.7898739585558642
+Background_recall: 0.8148719531008948
+OverTaking_f1: 0.5153569452130602
+OverTaking_precision: 0.6031411917098446
+OverTaking_recall: 0.4498792270531401
+LaneChange_f1: 0.13429394812680115
+LaneChange_precision: 0.16158113730929266
+LaneChange_recall: 0.11489151873767259
+WrongLane_f1: 0.02621231979030144
+WrongLane_precision: 0.03194888178913738
+WrongLane_recall: 0.022222222222222223
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 25weighted_roc_auc: 0.6552998668285986
+weighted_f1: 0.6686872129388924
+weighted_precision: 0.6836169243592207
+weighted_recall: 0.6599588719153937
+
+
+epoch: 30Background_f1: 0.8078428000171991
+Background_precision: 0.7885172283543879
+Background_recall: 0.828139463128664
+OverTaking_f1: 0.5212715267851065
+OverTaking_precision: 0.5972547184526595
+OverTaking_recall: 0.46243961352657004
+LaneChange_f1: 0.11547049441786283
+LaneChange_precision: 0.16350496838301717
+LaneChange_recall: 0.08925049309664694
+WrongLane_f1: 0.0177276390008058
+WrongLane_precision: 0.03225806451612903
+WrongLane_recall: 0.012222222222222223
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 30weighted_roc_auc: 0.656127699691246
+weighted_f1: 0.6725554313616634
+weighted_precision: 0.6814036357934574
+weighted_recall: 0.6700646298472386
+
+
+epoch: 35Background_f1: 0.7592583878405721
+Background_precision: 0.8142821095129952
+Background_recall: 0.7112002468373959
+OverTaking_f1: 0.5532522343594836
+OverTaking_precision: 0.5690755873340143
+OverTaking_recall: 0.5382850241545893
+LaneChange_f1: 0.15932133250569006
+LaneChange_precision: 0.13725490196078433
+LaneChange_recall: 0.1898422090729783
+WrongLane_f1: 0.06931106471816284
+WrongLane_precision: 0.05551839464882943
+WrongLane_recall: 0.09222222222222222
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 35weighted_roc_auc: 0.669148113877824
+weighted_f1: 0.6519302927733099
+weighted_precision: 0.6907721380143178
+weighted_recall: 0.618683901292597
+
+
+epoch: 40Background_f1: 0.7976838195127282
+Background_precision: 0.7909264234335731
+Background_recall: 0.8045576762022304
+OverTaking_f1: 0.5082811412665275
+OverTaking_precision: 0.599671592775041
+OverTaking_recall: 0.44106280193236713
+LaneChange_f1: 0.141280353200883
+LaneChange_precision: 0.14055636896046853
+LaneChange_recall: 0.14201183431952663
+WrongLane_f1: 0.040897097625329816
+WrongLane_precision: 0.05032467532467533
+WrongLane_recall: 0.034444444444444444
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 40weighted_roc_auc: 0.6543466083904008
+weighted_f1: 0.6647751059672826
+weighted_precision: 0.6827076698195902
+weighted_recall: 0.6528789659224442
+
+
+epoch: 45Background_f1: 0.7894549023106433
+Background_precision: 0.799042846178157
+Background_recall: 0.7800943271477058
+OverTaking_f1: 0.5261054874800213
+OverTaking_precision: 0.5864014251781473
+OverTaking_recall: 0.47705314009661837
+LaneChange_f1: 0.13715405339211367
+LaneChange_precision: 0.1362530413625304
+LaneChange_recall: 0.13806706114398423
+WrongLane_f1: 0.0644808743169399
+WrongLane_precision: 0.06344086021505377
+WrongLane_recall: 0.06555555555555556
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 45weighted_roc_auc: 0.6612651850249677
+weighted_f1: 0.6640040544130609
+weighted_precision: 0.6849796355404133
+weighted_recall: 0.6459165687426557
+
+
+epoch: 50Background_f1: 0.7773360292614216
+Background_precision: 0.8020628223159869
+Background_recall: 0.7540882443690219
+OverTaking_f1: 0.5318205529473136
+OverTaking_precision: 0.5779478458049887
+OverTaking_recall: 0.492512077294686
+LaneChange_f1: 0.13756866491521375
+LaneChange_precision: 0.1333950903195924
+LaneChange_recall: 0.14201183431952663
+WrongLane_f1: 0.07606679035250463
+WrongLane_precision: 0.06528662420382166
+WrongLane_recall: 0.09111111111111111
+Cutting_f1: 0.0
+Cutting_precision: 0.0
+Cutting_recall: 0.0
+
+
+epoch: 50weighted_roc_auc: 0.6612691136546844
+weighted_f1: 0.6576482384848101
+weighted_precision: 0.6848146480052782
+weighted_recall: 0.6332549941245593
+
