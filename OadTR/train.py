@@ -39,7 +39,6 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     header = 'Epoch: [{}]'.format(epoch)
     print_freq = 500
     num_class = 5
-    # set_trace()
     for camera_inputs, motion_inputs, enc_target, distance_target, class_h_target, dec_target in metric_logger.log_every(data_loader, print_freq, header):
         
         
@@ -66,6 +65,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         }
 
         loss_dict = criterion(outputs, targets)
+        # set_trace()
         # loss_dict_decoder = criterion(outputs_decoder, targets_decoder)
         weight_dict = criterion.weight_dict
         losses = sum(loss_dict[k] * weight_dict[k] for k in loss_dict.keys() if k in weight_dict)

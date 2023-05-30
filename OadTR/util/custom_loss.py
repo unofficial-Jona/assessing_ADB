@@ -38,7 +38,7 @@ class SetCriterion(nn.Module):
         self.margin = args.margin
         self.size_average = True
         self.logsoftmax = nn.LogSoftmax(dim=1)
-        
+        '''
         # self.loss_fn = nn.MultiLabelSoftMarginLoss(weight = args.weight_values if args.weighted_loss else None)
         self.loss_fn = nn.BCEWithLogitsLoss().to(args.device)
         '''
@@ -46,7 +46,7 @@ class SetCriterion(nn.Module):
             self.loss_fn = nn.BCEWithLogitsLoss(pos_weight = args.weight_values).to(args.device)
         else:
             self.loss_fn = nn.BCEWithLogitsLoss().to(args.device)
-        '''
+
     def loss_labels(self, input, targets, name):
         """Classification loss (NLL)
         targets dicts must contain the key "labels" containing a tensor of dim [nb_target_boxes]

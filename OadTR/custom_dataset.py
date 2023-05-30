@@ -288,7 +288,8 @@ class METEOR_3D(data.Dataset):
         camera_inputs = torch.tensor(camera_inputs)
         
         # motion_inputs = self.feature_all[session]['flow'][start:end]
-        motion_inputs = torch.empty_like(camera_inputs)
+        # motion_inputs = torch.empty_like(camera_inputs)
+        motion_inputs = None
         
         enc_target = torch.tensor(enc_target)
         distance_target = torch.tensor(distance_target)

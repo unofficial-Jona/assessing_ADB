@@ -182,8 +182,7 @@ if '__main__' == __name__:
     args.train_session_set = data_info['train_session_set']
     args.test_session_set = data_info['test_session_set']
     args.class_index = data_info['class_index']
-    
-    for kmean in ['/workspace/pvc-meteor/features/colar/gmm_centers.pickle', '/workspace/pvc-meteor/features/colar/kmeans_centers.pickle', '/workspace/pvc-meteor/features/colar/exemplar.pickle']:
-        args.kmean = kmean
-        args.exp_name = kmean.split('/')[-1]
-        main(args)
+
+    args.kmean = '/workspace/pvc-meteor/features/colar/exemplar.pickle'
+    args.exp_name = args.kmean.split('/')[-1]
+    main(args)

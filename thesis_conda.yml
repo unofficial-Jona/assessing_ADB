@@ -234,7 +234,6 @@ dependencies:
   - ptyprocess
   - jupyter-lsp
   - attrs
-  - keras
   - nbclient
   - nodejs
   - flit-core
@@ -249,7 +248,6 @@ dependencies:
   - astroid
   - libprotobuf
   - h5py
-  - tensorflow-base
   - pytorch
   - av
 prefix: /opt/conda/envs/thesis

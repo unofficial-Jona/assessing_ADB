@@ -52,8 +52,8 @@ def main(args):
 
     
     # prepare data_loader
-    dataset_train = METEOR_3D(phase='train', args=args, weights=args.weight_session_set)
-    dataset_val = METEOR_3D(phase='test', args=args)
+    dataset_train = METEORDataLayer(phase='train', args=args, weights=args.weight_session_set)
+    dataset_val = METEORDataLayer(phase='test', args=args)
 
     args.weight_values = dataset_train.weights
     
@@ -234,23 +234,17 @@ if __name__ == '__main__':
     args.all_class_name = ["Background", "OverTaking", "LaneChange", "WrongLane", "Cutting"]
     args.numclass = len(args.all_class_name)
     
+    
     args.num_layers = 3
     args.decoder_layers = 4
     args.weight_session_set = 'all'
-    args.epochs = 51
-    
-    files = {'features_i3d.pkl':2048}
-    
-    for k, v in files.items():
-        print(f'backbone: {k}, features: {v}')
-        args.pickle_file_name = k
-        args.dim_feature = v
-    
-        args.output_dir = f'experiments/final/{args.pickle_file_name}'
-        
-        warnings.warn('disabled optical flow')
-        args.use_flow = False
-    
-        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-        main(args)
-        # add_model_eval_to_comparison(args.output_dir)
+    args.epochs = 21
+
+    args.pickle_file_name = 'features_att_30_new.pkl'
+    args.dim_feature = 4096
+
+    args.output_dir = f'experiments/final/features_att_30_new.pkl'
+
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    main(args)
+    # add_model_eval_to_comparison(args.output_dir)
