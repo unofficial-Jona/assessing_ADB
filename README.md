@@ -11,9 +11,6 @@ This reserach presents two novel contributions.
 - An intetegrated model architecture is presented that combines architectural concepts from the OadTR model and the Colar model.
 - An explainability approach, leveraging prior frame information to generate salient cues. 
 
-For replication please use the YAML file to set up the conda environment.
-```
-conda env create -f thesis_conda.yml
-```
+For replication please use the [YAML file](https://github.com/unofficial-Jona/thesis/blob/main/thesis_conda.yml) to set up the conda environment.
 
 Anyone building uppon this is heavily encouraged to train a custom backbone, as this appeared to be the main performance bottleneck encountered during this project.
