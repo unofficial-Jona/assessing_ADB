@@ -1,4 +1,4 @@
-# Assessing aggressive driving behaviour using attentino based models
+# Assessing aggressive driving behaviour using attention based models
 
 The findings from this project are currently under review for publication at the BNAIC2023. A link to the paper will be proivded ASAP.
 
