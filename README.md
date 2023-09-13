@@ -1,5 +1,4 @@
-# thesis
-Detecting Aggressive Driving Behaviour in Videos using Transformer models
+# Assessing aggressive driving behaviour using attentino based models
 
 The findings from this project are currently under review for publication at the BNAIC2023. A link to the paper will be proivded ASAP.
 
@@ -17,3 +16,4 @@ For replication please use the YAML file to set up the conda environment.
 conda env create -f thesis_conda.yml
 ```
 
+Anyone building uppon this is heavily encouraged to train a custom backbone, as this appeared to be the main performance bottleneck encountered during this project.
