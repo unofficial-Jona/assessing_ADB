@@ -6,7 +6,7 @@ Dataset: https://gamma.umd.edu/researchdirections/autonomousdriving/meteor/
 
 This repository contains the code needed to replicate the experiments conducted for my master thesis. The fulltext version of whcih can be found in [thesis.pdf](https://github.com/unofficial-Jona/thesis/blob/main/thesis.pdf)
 
-The findings presented here build heavily upon the [OadTR](https://github.com/wangxiang1230/OadTR) and [Colar model](https://github.com/VividLe/Online-Action-Detection). Both of which present successfull applications of the attention mechanism in the context of online action detection.
+The findings presented here build heavily upon the [OadTR](https://github.com/wangxiang1230/OadTR) and [Colar](https://github.com/VividLe/Online-Action-Detection) model. Both of which present successfull applications of the attention mechanism in the context of online action detection.
 This reserach presents two novel contributions. 
 - An intetegrated model architecture is presented that combines architectural concepts from the OadTR model and the Colar model.
 - An explainability approach, leveraging prior frame information to generate salient cues. 
