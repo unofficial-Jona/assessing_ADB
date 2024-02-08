@@ -1,4 +1,4 @@
-# Please find the original Colar repository for the original code here: https://github.com/VividLe/Online-Action-Detection
+# Please check the original Colar repository here: https://github.com/VividLe/Online-Action-Detection
 
 # Colar: Effective and Efficient Online Action Detection by Consulting Exemplars
 
