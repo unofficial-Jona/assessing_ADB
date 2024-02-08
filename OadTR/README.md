@@ -1,4 +1,4 @@
-# Code is mainly coppied from the original repository: https://github.com/wangxiang1230/OadTR
+# Please check the original OadTR repository here: https://github.com/wangxiang1230/OadTR
 
 # Video Features
 OadTR uses RGB and Flow features. to extract these features from the original videos the following models were used:
