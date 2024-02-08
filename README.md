@@ -10,7 +10,3 @@ The research presented here builds heavily upon the [OadTR](https://github.com/w
 
 1. An integrated model architecture that combines concepts from both the OadTR and Colar models.
 2. An explainability approach that leverages prior frame information to generate salient cues.
-
-For replication, please use the provided [YAML file](https://github.com/unofficial-Jona/thesis/blob/main/thesis_conda.yml) to set up the conda environment.
-
-Anyone extending this work is strongly encouraged to train a custom backbone. This was identified as the primary performance bottleneck during this project.
